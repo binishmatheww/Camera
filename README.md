@@ -79,7 +79,7 @@ ConstraintLayout(
 
 # License
 ```xml
-Copyright 2022 Binish Mathew & The Android Open Source Project
+Copyright 2022 Binish Mathew and The Android Open Source Project
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
