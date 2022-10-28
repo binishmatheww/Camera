@@ -16,12 +16,12 @@ import java.util.*
 
 
 /** Helper class used as a data holder for each selectable camera format item */
-data class FormatItem(val title: String, val cameraId: String, val format: Int)
+data class CameraFormat(val title: String, val cameraId: String, val format: Int)
 
 /** Helper function used to list all compatible cameras and supported pixel formats */
 @SuppressLint("InlinedApi")
-fun CameraManager.enumerateCameras(): List<FormatItem> {
-    val availableCameras: MutableList<FormatItem> = mutableListOf()
+fun CameraManager.enumerateCameras(): List<CameraFormat> {
+    val availableCameras: MutableList<CameraFormat> = mutableListOf()
 
     // Get list of all compatible cameras
     val cameraIds = this.cameraIdList.filter {
@@ -49,14 +49,14 @@ fun CameraManager.enumerateCameras(): List<FormatItem> {
             CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.outputFormats
 
         // All cameras *must* support JPEG output so we don't need to check characteristics
-        availableCameras.add(FormatItem(
+        availableCameras.add(CameraFormat(
             "$orientation JPEG ($id)", id, ImageFormat.JPEG))
 
         // Return cameras that support RAW capability
         if (capabilities.contains(
                 CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_RAW) &&
             outputFormats.contains(ImageFormat.RAW_SENSOR)) {
-            availableCameras.add(FormatItem(
+            availableCameras.add(CameraFormat(
                 "$orientation RAW ($id)", id, ImageFormat.RAW_SENSOR))
         }
 
@@ -64,7 +64,7 @@ fun CameraManager.enumerateCameras(): List<FormatItem> {
         if (capabilities.contains(
                 CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_DEPTH_OUTPUT) &&
             outputFormats.contains(ImageFormat.DEPTH_JPEG)) {
-            availableCameras.add(FormatItem(
+            availableCameras.add(CameraFormat(
                 "$orientation DEPTH ($id)", id, ImageFormat.DEPTH_JPEG))
         }
     }
