@@ -39,13 +39,15 @@ class CameraController(
 
     var cameraManager : CameraManager
 
-    var availableCameras : List<FormatItem>
+    var availableCameraFormats : List<CameraFormat>
 
-    var selectedCamera : FormatItem
+    var selectedCameraFormat : CameraFormat
 
     lateinit var characteristics : CameraCharacteristics
 
     lateinit var imageReader : ImageReader
+
+    lateinit var targets : List<Surface>
 
     lateinit var camera : CameraDevice
 
@@ -77,32 +79,26 @@ class CameraController(
 
         cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
 
-        availableCameras = cameraManager.enumerateCameras()
+        availableCameraFormats = cameraManager.enumerateCameras()
 
-        selectedCamera = availableCameras[0]
+        selectedCameraFormat = availableCameraFormats[0]
 
-        characteristics = cameraManager.getCameraCharacteristics(selectedCamera.cameraId)
+        characteristics = cameraManager.getCameraCharacteristics(selectedCameraFormat.cameraId)
 
     }
 
-    fun selectCamera( formatItem: FormatItem ){
+    fun selectCamera(cameraFormat: CameraFormat ){
 
-        selectedCamera = formatItem
+        selectedCameraFormat = cameraFormat
 
-        characteristics = cameraManager.getCameraCharacteristics(selectedCamera.cameraId)
+        characteristics = cameraManager.getCameraCharacteristics(selectedCameraFormat.cameraId)
 
     }
 
     suspend fun captureImage() {
 
         takePhoto(
-            imageReader = imageReader,
-            imageReaderHandler = imageReaderHandler,
-            session = session,
-            cameraHandler = cameraHandler,
-            characteristics = characteristics,
-            coroutineScope = CoroutineScope(Dispatchers.IO),
-            relativeOrientation = relativeOrientation
+            cameraController = this
         ).use { result ->
 
             Log.wtf(TAG, "Result received: $result")
@@ -167,6 +163,14 @@ class CameraController(
             }, handler)
         }
 
+        suspend fun openCamera(
+            cameraController: CameraController
+        ) : CameraDevice  = openCamera(
+            manager = cameraController.cameraManager,
+            cameraId = cameraController.selectedCameraFormat.cameraId,
+            handler = cameraController.cameraHandler
+        )
+
         /**
          * Starts a [CameraCaptureSession] and returns the configured session (as the result of the
          * suspend coroutine
@@ -197,6 +201,14 @@ class CameraController(
             )
 
         }
+
+        suspend fun createCaptureSession(
+            cameraController: CameraController
+        ): CameraCaptureSession = createCaptureSession(
+            device = cameraController.camera,
+            targets = cameraController.targets,
+            handler = cameraController.cameraHandler
+        )
 
         /**
          * Helper function used to capture a still image using the [CameraDevice.TEMPLATE_STILL_CAPTURE]
@@ -334,6 +346,19 @@ class CameraController(
                 cameraHandler
             )
         }
+
+        suspend fun takePhoto(
+            cameraController: CameraController
+        ): CombinedCaptureResult = takePhoto(
+            imageReader = cameraController.imageReader,
+            imageReaderHandler = cameraController.imageReaderHandler,
+            session = cameraController.session,
+            cameraHandler = cameraController.cameraHandler,
+            characteristics = cameraController.characteristics,
+            coroutineScope = CoroutineScope(Dispatchers.IO),
+            relativeOrientation = cameraController.relativeOrientation,
+            onCaptureStarted = {}
+        )
 
         /** Helper function used to save a [CombinedCaptureResult] into a [File] */
         suspend fun saveResult(
