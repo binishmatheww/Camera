@@ -15,7 +15,66 @@ This lib makes the use of Camera2 APIs with [Jetpack Compose](https://developer.
 
 <br>
 
-This lib usees code samples from [Camera2Basic](https://github.com/android/camera-samples/tree/main/Camera2Basic)
+This lib usees code from [Camera2Basic](https://github.com/android/camera-samples/tree/main/Camera2Basic) sample by google.
+
+### Usage
+Use `CameraPreviewLayout` composable to preview frames from the camera.
+You must pass a `CameraController` to the composable.
+an instance of `CameraController` can be obtained using `rememberCameraController()`.
+
+```kotlin
+
+ConstraintLayout(
+                modifier = Modifier
+                    .fillMaxSize()
+            ) {
+
+                val (
+                cameraPreviewLayoutConstraint,
+                captureButtonConstraint
+                ) = createRefs()
+
+                val cameraController = rememberCameraController()
+
+                val coroutineScope = rememberCoroutineScope()
+
+                var isCaptureButtonEnabled by remember { mutableStateOf(true) }
+
+                CameraPreviewLayout(
+                    modifier = Modifier
+                        .constrainAs(cameraPreviewLayoutConstraint){
+                            linkTo(top = parent.top, bottom = parent.bottom)
+                            linkTo(start = parent.start, end = parent.end)
+                        },
+                    cameraController = cameraController,
+                )
+
+                Button(
+                    modifier = Modifier.constrainAs(captureButtonConstraint){
+                        linkTo(start = parent.start, end = parent.end)
+                        bottom.linkTo(parent.bottom, 24.dp)
+                    },
+                    enabled = isCaptureButtonEnabled,
+                    onClick = {
+                        coroutineScope.launch {
+
+                            isCaptureButtonEnabled = false
+                            cameraController.captureImage()
+                            isCaptureButtonEnabled = true
+
+                        }
+                    }
+                ) {
+
+                    Text(
+                        text = "Capture"
+                    )
+
+                }
+
+            }
+
+```
 
 # License
 ```xml
