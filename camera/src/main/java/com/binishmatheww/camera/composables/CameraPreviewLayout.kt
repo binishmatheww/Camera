@@ -3,20 +3,15 @@ package com.binishmatheww.camera.composables
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
 import android.media.ImageReader
-import android.util.Log
 import android.view.SurfaceHolder
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.constraintlayout.compose.ConstraintLayout
 import com.binishmatheww.camera.CameraController
 import com.binishmatheww.camera.utils.AutoFitSurfaceView
 import com.binishmatheww.camera.utils.IMAGE_BUFFER_SIZE
 import com.binishmatheww.camera.utils.getPreviewOutputSize
 import kotlinx.coroutines.launch
-
-private const val TAG = "CameraPreview"
 
 @Composable
 fun CameraPreviewLayout(
@@ -24,104 +19,87 @@ fun CameraPreviewLayout(
     modifier: Modifier = Modifier
 ) {
 
-    ConstraintLayout(
-        modifier = modifier
-    ) {
+    AndroidView(
+        modifier = modifier,
+        factory = { con ->
 
-        val coroutineScope = rememberCoroutineScope()
+            val viewFinder = AutoFitSurfaceView(con)
 
-        val cameraPreviewConstraint = createRef()
+            viewFinder.holder.addCallback(object : SurfaceHolder.Callback {
 
-        AndroidView(
-            modifier = Modifier
-                .constrainAs(cameraPreviewConstraint) {
-                    linkTo(top = parent.top, bottom = parent.bottom)
-                    linkTo(start = parent.start, end = parent.end)
-                },
-            factory = { con ->
+                override fun surfaceDestroyed(
+                    holder: SurfaceHolder
+                ) = Unit
 
-                val viewFinder = AutoFitSurfaceView(con)
+                override fun surfaceChanged(
+                    holder: SurfaceHolder,
+                    format: Int,
+                    width: Int,
+                    height: Int
+                ) = Unit
 
-                viewFinder.holder.addCallback(object : SurfaceHolder.Callback {
+                override fun surfaceCreated(holder: SurfaceHolder) {
 
-                    override fun surfaceDestroyed(
-                        holder: SurfaceHolder
-                    ) = Unit
+                    // Selects appropriate preview size and configures view finder
+                    val previewSize = getPreviewOutputSize(
+                        viewFinder.display,
+                        cameraController.characteristics,
+                        SurfaceHolder::class.java
+                    )
 
-                    override fun surfaceChanged(
-                        holder: SurfaceHolder,
-                        format: Int,
-                        width: Int,
-                        height: Int
-                    ) = Unit
+                    viewFinder.setAspectRatio(
+                        previewSize.width,
+                        previewSize.height
+                    )
 
-                    override fun surfaceCreated(holder: SurfaceHolder) {
+                    cameraController.cameraCoroutineScope.launch {
 
-                        // Selects appropriate preview size and configures view finder
-                        val previewSize = getPreviewOutputSize(
-                            viewFinder.display,
-                            cameraController.characteristics,
-                            SurfaceHolder::class.java
+                        // Open the selected camera
+                        cameraController.camera = CameraController.openCamera(
+                            cameraController = cameraController
                         )
 
-                        Log.d(TAG, "View finder size: ${viewFinder.width} x ${viewFinder.height}")
-                        Log.d(TAG, "Selected preview size: $previewSize")
+                        // Initialize an image reader which will be used to capture still photos
+                        val size = cameraController.characteristics
+                            .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+                            ?.getOutputSizes(cameraController.selectedCameraFormat.format)
+                            ?.maxByOrNull { it.height * it.width }!!
 
-                        viewFinder.setAspectRatio(
-                            previewSize.width,
-                            previewSize.height
+                        cameraController.imageReader = ImageReader.newInstance(
+                            size.width,
+                            size.height,
+                            cameraController.selectedCameraFormat.format,
+                            IMAGE_BUFFER_SIZE
                         )
 
-                        coroutineScope.launch {
+                        // Creates list of Surfaces where the camera will output frames
+                        cameraController.targets = listOf(viewFinder.holder.surface, cameraController.imageReader.surface)
 
-                            // Open the selected camera
-                            cameraController.camera = CameraController.openCamera(
-                                cameraController = cameraController
-                            )
+                        // Start a capture session using our open camera and list of Surfaces where frames will go
+                        cameraController.session = CameraController.createCaptureSession(
+                            cameraController = cameraController
+                        )
 
-                            // Initialize an image reader which will be used to capture still photos
-                            val size = cameraController.characteristics
-                                .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                                ?.getOutputSizes(cameraController.selectedCameraFormat.format)
-                                ?.maxByOrNull { it.height * it.width }!!
+                        val captureRequest = cameraController.camera.createCaptureRequest(
+                            CameraDevice.TEMPLATE_PREVIEW
+                        ).apply { addTarget(viewFinder.holder.surface) }
 
-                            cameraController.imageReader = ImageReader.newInstance(
-                                size.width,
-                                size.height,
-                                cameraController.selectedCameraFormat.format,
-                                IMAGE_BUFFER_SIZE
-                            )
-
-                            // Creates list of Surfaces where the camera will output frames
-                            cameraController.targets = listOf(viewFinder.holder.surface, cameraController.imageReader.surface)
-
-                            // Start a capture session using our open camera and list of Surfaces where frames will go
-                            cameraController.session = CameraController.createCaptureSession(
-                                cameraController = cameraController
-                            )
-
-                            val captureRequest = cameraController.camera.createCaptureRequest(
-                                CameraDevice.TEMPLATE_PREVIEW
-                            ).apply { addTarget(viewFinder.holder.surface) }
-
-                            // This will keep sending the capture request as frequently as possible until the
-                            // session is torn down or session.stopRepeating() is called
-                            cameraController.session.setRepeatingRequest(
-                                captureRequest.build(),
-                                null,
-                                cameraController.cameraHandler
-                            )
-
-                        }
+                        // This will keep sending the capture request as frequently as possible until the
+                        // session is torn down or session.stopRepeating() is called
+                        cameraController.session.setRepeatingRequest(
+                            captureRequest.build(),
+                            null,
+                            cameraController.cameraHandler
+                        )
 
                     }
-                })
 
-                viewFinder
+                }
+            })
 
-            }
-        )
+            viewFinder
 
-    }
+        }
+    )
 
 }
