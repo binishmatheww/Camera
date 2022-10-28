@@ -6,16 +6,29 @@
 <br>
 
 <p align="center">
-    <b>Camera</b> is a library for Android built using Camera2 APIs.
+    <b>Camera</b> is a library for Android built using the [Camera2][1] API.
 </p>
 
 <br>
 
-This lib makes the use of Camera2 APIs with [Jetpack Compose](https://developer.android.com/jetpack/compose) easier.
+The [Camera2][1] API allows users to capture RAW images, i.e. unprocessed pixel data
+directly from the camera sensor that has not yet been converted into a format and
+colorspace typically used for displaying and storing images viewed by humans.
+The [DngCreator][2] class is provided as part of the Camera2 API as a utility for saving
+RAW images as DNG files.
+
+Aim of this lib is to make the use of [Camera2][1] APIs with [Jetpack Compose][3] easier.
 
 <br>
 
-This lib usees code from [Camera2Basic](https://github.com/android/camera-samples/tree/main/Camera2Basic) sample by google.
+This lib usees code from [Camera2Basic][4] sample by google.
+
+[1]: https://developer.android.com/reference/android/hardware/camera2/package-summary.html
+[2]: https://developer.android.com/reference/android/hardware/camera2/DngCreator.html
+[3]: https://developer.android.com/jetpack/compose
+[4]: https://github.com/android/camera-samples/tree/main/Camera2Basic
+
+<br>
 
 ### Usage
 Use `CameraPreviewLayout` composable to preview frames from the camera.
@@ -73,9 +86,15 @@ ConstraintLayout(
 
                 }
 
-            }
+}
 
 ```
+
+Support
+-------
+
+Patches are encouraged, and may be submitted by forking this project and
+submitting a pull request through GitHub.
 
 # License
 ```xml
