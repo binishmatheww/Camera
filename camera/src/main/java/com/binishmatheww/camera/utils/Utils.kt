@@ -21,20 +21,22 @@ data class CameraFormat(val title: String, val cameraId: String, val format: Int
 /** Helper function used to list all compatible cameras and supported pixel formats */
 @SuppressLint("InlinedApi")
 fun CameraManager.enumerateCameras(): List<CameraFormat> {
+
     val availableCameras: MutableList<CameraFormat> = mutableListOf()
 
     // Get list of all compatible cameras
     val cameraIds = this.cameraIdList.filter {
         val characteristics = this.getCameraCharacteristics(it)
-        val capabilities = characteristics.get(
-            CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES)
+        val capabilities = characteristics.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES)
         capabilities?.contains(CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_BACKWARD_COMPATIBLE) ?: false
     }
 
 
     // Iterate over the list of cameras and return all the compatible ones
     cameraIds.forEach { id ->
+
         val characteristics = this.getCameraCharacteristics(id)
+
         val orientation = when(characteristics.get(CameraCharacteristics.LENS_FACING)!!) {
             CameraCharacteristics.LENS_FACING_BACK -> "Back"
             CameraCharacteristics.LENS_FACING_FRONT -> "Front"
@@ -43,33 +45,32 @@ fun CameraManager.enumerateCameras(): List<CameraFormat> {
         }
 
         // Query the available capabilities and output formats
-        val capabilities = characteristics.get(
-            CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES)!!
-        val outputFormats = characteristics.get(
-            CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.outputFormats
+        val capabilities = characteristics.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES) ?: IntArray(0)
+        val outputFormats = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)?.outputFormats ?: IntArray(0)
 
         // All cameras *must* support JPEG output so we don't need to check characteristics
-        availableCameras.add(CameraFormat(
-            "$orientation JPEG ($id)", id, ImageFormat.JPEG))
+        availableCameras.add(CameraFormat("$orientation JPEG ($id)", id, ImageFormat.JPEG))
 
         // Return cameras that support RAW capability
-        if (capabilities.contains(
-                CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_RAW) &&
-            outputFormats.contains(ImageFormat.RAW_SENSOR)) {
-            availableCameras.add(CameraFormat(
-                "$orientation RAW ($id)", id, ImageFormat.RAW_SENSOR))
+        if (
+            capabilities.contains(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_RAW) &&
+            outputFormats.contains(ImageFormat.RAW_SENSOR)
+        ) {
+            availableCameras.add(CameraFormat("$orientation RAW ($id)", id, ImageFormat.RAW_SENSOR))
         }
 
         // Return cameras that support JPEG DEPTH capability
-        if (capabilities.contains(
-                CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_DEPTH_OUTPUT) &&
-            outputFormats.contains(ImageFormat.DEPTH_JPEG)) {
-            availableCameras.add(CameraFormat(
-                "$orientation DEPTH ($id)", id, ImageFormat.DEPTH_JPEG))
+        if (
+            capabilities.contains(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_DEPTH_OUTPUT) &&
+            outputFormats.contains(ImageFormat.DEPTH_JPEG)
+        ) {
+            availableCameras.add(CameraFormat("$orientation DEPTH ($id)", id, ImageFormat.DEPTH_JPEG))
         }
+
     }
 
     return availableCameras
+
 }
 
 /** Maximum number of images that will be held in the reader's buffer */
