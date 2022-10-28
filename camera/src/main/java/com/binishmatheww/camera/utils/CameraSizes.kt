@@ -56,18 +56,20 @@ fun <T>getPreviewOutputSize(
 
     // Find which is smaller: screen or 1080p
     val screenSize = getDisplaySmartSize(display)
+
     val hdScreen = screenSize.long >= SIZE_1080P.long || screenSize.short >= SIZE_1080P.short
+
     val maxSize = if (hdScreen) SIZE_1080P else screenSize
 
     // If image format is provided, use it to determine supported sizes; else use target class
-    val config = characteristics.get(
-            CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
+    val config = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!
+
     if (format == null)
         assert(StreamConfigurationMap.isOutputSupportedFor(targetClass))
     else
         assert(config.isOutputSupportedFor(format))
-    val allSizes = if (format == null)
-        config.getOutputSizes(targetClass) else config.getOutputSizes(format)
+
+    val allSizes = if (format == null) config.getOutputSizes(targetClass) else config.getOutputSizes(format)
 
     // Get available sizes and sort them by area from largest to smallest
     val validSizes = allSizes
@@ -76,4 +78,7 @@ fun <T>getPreviewOutputSize(
 
     // Then, get the largest output size that is smaller or equal than our max size
     return validSizes.first { it.long <= maxSize.long && it.short <= maxSize.short }.size
+
+    //return validSizes.first { it.size.width == 176 && it.size.height == 144 }.size
+
 }
