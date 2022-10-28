@@ -25,9 +25,9 @@ an instance of `CameraController` can be obtained using `rememberCameraControlle
 ```kotlin
 
 ConstraintLayout(
-                modifier = Modifier
-                    .fillMaxSize()
-            ) {
+    modifier = Modifier
+       .fillMaxSize()
+) {
 
                 val (
                 cameraPreviewLayoutConstraint,
