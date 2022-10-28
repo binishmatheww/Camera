@@ -76,29 +76,29 @@ fun CameraPreviewLayout(
 
                             // Open the selected camera
                             cameraController.camera = CameraController.openCamera(
-                                cameraController.cameraManager,
-                                cameraController.selectedCamera.cameraId,
-                                cameraController.cameraHandler
+                                cameraController = cameraController
                             )
 
                             // Initialize an image reader which will be used to capture still photos
                             val size = cameraController.characteristics
                                 .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                                ?.getOutputSizes(cameraController.selectedCamera.format)
+                                ?.getOutputSizes(cameraController.selectedCameraFormat.format)
                                 ?.maxByOrNull { it.height * it.width }!!
 
                             cameraController.imageReader = ImageReader.newInstance(
                                 size.width,
                                 size.height,
-                                cameraController.selectedCamera.format,
+                                cameraController.selectedCameraFormat.format,
                                 IMAGE_BUFFER_SIZE
                             )
 
                             // Creates list of Surfaces where the camera will output frames
-                            val targets = listOf(viewFinder.holder.surface, cameraController.imageReader.surface)
+                            cameraController.targets = listOf(viewFinder.holder.surface, cameraController.imageReader.surface)
 
                             // Start a capture session using our open camera and list of Surfaces where frames will go
-                            cameraController.session = CameraController.createCaptureSession(cameraController.camera, targets, cameraController.cameraHandler)
+                            cameraController.session = CameraController.createCaptureSession(
+                                cameraController = cameraController
+                            )
 
                             val captureRequest = cameraController.camera.createCaptureRequest(
                                 CameraDevice.TEMPLATE_PREVIEW
