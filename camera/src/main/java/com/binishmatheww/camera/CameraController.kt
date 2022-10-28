@@ -37,6 +37,8 @@ class CameraController(
 
     private val imageReaderHandler = Handler(imageReaderThread.looper)
 
+    val cameraCoroutineScope = CoroutineScope(Dispatchers.IO)
+
     var cameraManager : CameraManager
 
     var availableCameraFormats : List<CameraFormat>
@@ -87,7 +89,7 @@ class CameraController(
 
     }
 
-    fun selectCamera(cameraFormat: CameraFormat ){
+    fun selectCamera( cameraFormat: CameraFormat ){
 
         selectedCameraFormat = cameraFormat
 
@@ -355,7 +357,7 @@ class CameraController(
             session = cameraController.session,
             cameraHandler = cameraController.cameraHandler,
             characteristics = cameraController.characteristics,
-            coroutineScope = CoroutineScope(Dispatchers.IO),
+            coroutineScope = cameraController.cameraCoroutineScope,
             relativeOrientation = cameraController.relativeOrientation,
             onCaptureStarted = {}
         )
