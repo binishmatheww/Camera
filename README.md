@@ -4,8 +4,11 @@
 
 <p align="center">
 Camera is a library for Android built using Camera2 APIs.
-This lib makes the use of Camera2 APIs with [Jetpack Compose](https://developer.android.com/jetpack/compose) easier.
 </p>
+
+This lib makes the use of Camera2 APIs with [Jetpack Compose](https://developer.android.com/jetpack/compose) easier.
+
+<br>
 
 This lib usees code samples from [Camera2Basic](https://github.com/android/camera-samples/tree/main/Camera2Basic)
 
