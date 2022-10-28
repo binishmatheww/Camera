@@ -20,7 +20,8 @@ This lib usees code from [Camera2Basic](https://github.com/android/camera-sample
 ### Usage
 Use `CameraPreviewLayout` composable to preview frames from the camera.
 You must pass a `CameraController` to the composable.
-an instance of `CameraController` can be obtained using `rememberCameraController()`.
+An instance of `CameraController` can be obtained using `rememberCameraController()`.
+By default, the `CameraController` will select the back facing camera.
 
 ```kotlin
 
