@@ -6,7 +6,7 @@
 <br>
 
 <p align="center">
-    <b>Camera</b> is a library for Android built using the [Camera2][1] API.
+    <b>Camera</b> is a library for Android built using the Camera2 API.
 </p>
 
 <br>
