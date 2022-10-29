@@ -54,6 +54,14 @@ class CameraController(
 
     var selectedCameraCharacteristics : CameraCharacteristics? = null
 
+    val availableCameraSizes = mutableListOf<Size>()
+
+    val availableCameraSizesFlow = MutableStateFlow<List<Size>>(availableCameraSizes)
+
+    var selectedCameraSize : Size? = null
+
+    var selectedCameraSizeFlow = MutableStateFlow(selectedCameraSize)
+
     var imageReader : ImageReader? = null
 
     val targetSurfaces  = mutableListOf<Surface>()
@@ -91,9 +99,13 @@ class CameraController(
         cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
 
         availableCameraProps.clear()
-        addAvailableCameraProps(cameraManager.enumerateCameras())
 
-        selectCamera(availableCameraProps.firstOrNull())
+        cameraScope.launch {
+
+            addAvailableCameraProps(cameraManager.enumerateCameras())
+            selectCamera(availableCameraProps.firstOrNull())
+
+        }
 
     }
 
@@ -101,11 +113,7 @@ class CameraController(
 
         cameraScope.launch {
 
-            val sizes = selectedCameraProp?.outputSizes ?: emptyList()
-
-            val size = sizes.maxByOrNull { it.height * it.width }
-
-            setSize(size)
+            setSize(selectedCameraSize)
 
             // Open the selected camera
             cameraDevice = openCamera(cameraController = this@CameraController)
@@ -139,49 +147,99 @@ class CameraController(
 
     }
 
-    fun addAvailableCameraProp( cameraProp : CameraProp ){
+    fun dispose( cause : String = "dispose called manually." ){
+
+        cameraThread.quitSafely()
+        cameraHandler.removeCallbacksAndMessages(null)
+        imageReaderThread.quitSafely()
+        imageReaderHandler.removeCallbacksAndMessages(null)
+
+        viewFinder = null
+        selectedCameraProp = null
+        selectedCameraCharacteristics = null
+        selectedCameraSize = null
+        imageReader = null
+        cameraDevice = null
+        cameraCaptureSession = null
+
+        relativeOrientationListener?.disable()
+        relativeOrientationListener = null
+
+        cameraCaptureSession?.stopRepeating()
+        cameraCaptureSession = null
+
+        cameraScope.cancel(cause)
+
+    }
+
+    suspend fun addAvailableCameraProp( cameraProp : CameraProp ){
 
         availableCameraProps.add(cameraProp)
 
-        cameraScope.launch {
-            availableCameraPropsFlow.emit(availableCameraProps)
-        }
+        availableCameraPropsFlow.emit(availableCameraProps)
 
     }
 
-    fun addAvailableCameraProps( cameraProps : List<CameraProp> ){
+    suspend fun addAvailableCameraProps( cameraProps : List<CameraProp> ){
 
         availableCameraProps.addAll(cameraProps)
 
-        cameraScope.launch {
-            availableCameraPropsFlow.emit(availableCameraProps)
-        }
+        availableCameraPropsFlow.emit(availableCameraProps)
 
     }
 
-    fun selectCamera( cameraProp : CameraProp? ){
+    suspend fun selectCamera( cameraProp : CameraProp? ){
 
         selectedCameraProp = cameraProp
 
         selectedCameraCharacteristics = cameraManager.getCameraCharacteristics(selectedCameraProp!!.cameraId)
 
-        cameraScope.launch {
-            selectedCameraPropFlow.emit(selectedCameraProp)
+        selectedCameraPropFlow.emit(selectedCameraProp)
+
+        availableCameraSizes.clear()
+
+        addAvailableCameraSizes(selectedCameraProp?.outputSizes)
+
+
+    }
+
+    suspend fun addAvailableCameraSize( size : Size? ){
+
+        if(size != null){
+
+            availableCameraSizes.add(size)
+
+            availableCameraSizesFlow.emit(availableCameraSizes)
+
         }
 
     }
 
-    suspend fun setSize( size: Size? ) = withContext(Dispatchers.Main){
+    suspend fun addAvailableCameraSizes( sizes : List<Size>? ){
 
-        viewFinder?.setAspectRatio(size!!.width, size.height)
+        sizes?.let {
+            availableCameraSizes.addAll(it)
+        }
+
+        availableCameraSizesFlow.emit(availableCameraSizes)
+
+    }
+
+    suspend fun setSize( inputSize : Size? ) = withContext(Dispatchers.Main){
+
+        selectedCameraSize = inputSize ?: selectedCameraProp?.outputSizes?.maxByOrNull { it.height * it.width }
+
+        viewFinder?.setAspectRatio(selectedCameraSize!!.width, selectedCameraSize!!.height)
 
         // Initialize an image reader which will be used to capture still photos
         imageReader = ImageReader.newInstance(
-            size!!.width,
-            size.height,
+            selectedCameraSize!!.width,
+            selectedCameraSize!!.height,
             selectedCameraProp!!.formatId,
             IMAGE_BUFFER_SIZE
         )
+
+        selectedCameraSizeFlow.emit(selectedCameraSize)
 
     }
 
@@ -330,8 +388,10 @@ class CameraController(
                 imageQueue.add(image)
             }, imageReaderHandler)
 
-            val captureRequest = session.device.createCaptureRequest(
-                CameraDevice.TEMPLATE_STILL_CAPTURE).apply { addTarget(imageReader.surface) }
+            val captureRequest = session.device
+                .createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE)
+                .apply { addTarget(imageReader.surface) }
+
             session.capture(captureRequest.build(),
                 object : CameraCaptureSession.CaptureCallback() {
 
@@ -435,6 +495,7 @@ class CameraController(
             },
                 cameraHandler
             )
+
         }
 
         suspend fun takePhoto(
