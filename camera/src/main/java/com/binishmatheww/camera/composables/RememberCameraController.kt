@@ -2,7 +2,6 @@ package com.binishmatheww.camera.composables
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.DisposableEffectResult
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.binishmatheww.camera.CameraController
@@ -21,8 +20,8 @@ fun rememberCameraController() : CameraController {
 
             onDispose {
                 cameraController.relativeOrientationListener?.disable()
-                cameraController.session?.stopRepeating()
-                cameraController.cameraCoroutineScope.cancel("Recomposition triggered.")
+                cameraController.cameraCaptureSession?.stopRepeating()
+                cameraController.cameraScope.cancel("Recomposition triggered.")
             }
 
         }

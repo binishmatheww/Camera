@@ -37,7 +37,7 @@ class CameraController(
 
     private val imageReaderHandler = Handler(imageReaderThread.looper)
 
-    val cameraCoroutineScope = CoroutineScope(Dispatchers.IO)
+    val cameraScope = CoroutineScope(Dispatchers.IO)
 
     var cameraManager : CameraManager
 
@@ -45,15 +45,15 @@ class CameraController(
 
     var selectedCameraProp : CameraProp
 
-    var characteristics : CameraCharacteristics? = null
+    var selectedCameraCharacteristics : CameraCharacteristics? = null
 
     var imageReader : ImageReader? = null
 
     val targets  = mutableListOf<Surface>()
 
-    var camera : CameraDevice? = null
+    var cameraDevice : CameraDevice? = null
 
-    var session : CameraCaptureSession? = null
+    var cameraCaptureSession : CameraCaptureSession? = null
 
     var relativeOrientationListener : OrientationEventListener? = null
 
@@ -71,7 +71,7 @@ class CameraController(
                     orientation <= 315 -> Surface.ROTATION_270
                     else -> Surface.ROTATION_0
                 }
-                val relative = computeRelativeRotation(characteristics!!, rotation)
+                val relative = computeRelativeRotation(selectedCameraCharacteristics!!, rotation)
                 if (relative != relativeOrientation) {
                     relativeOrientation = relative
                 }
@@ -88,7 +88,7 @@ class CameraController(
 
         selectedCameraProp = availableCameraProps[0]
 
-        characteristics = cameraManager.getCameraCharacteristics(selectedCameraProp.cameraId)
+        selectedCameraCharacteristics = cameraManager.getCameraCharacteristics(selectedCameraProp.cameraId)
 
     }
 
@@ -96,7 +96,7 @@ class CameraController(
 
         selectedCameraProp = cameraProp
 
-        characteristics = cameraManager.getCameraCharacteristics(selectedCameraProp.cameraId)
+        selectedCameraCharacteristics = cameraManager.getCameraCharacteristics(selectedCameraProp.cameraId)
 
     }
 
@@ -111,7 +111,7 @@ class CameraController(
             // Save the result to disk
             val output = saveResult(
                 context = context,
-                characteristics = characteristics!!,
+                characteristics = selectedCameraCharacteristics!!,
                 result = result,
             )
 
@@ -210,7 +210,7 @@ class CameraController(
         suspend fun createCaptureSession(
             cameraController: CameraController
         ): CameraCaptureSession = createCaptureSession(
-            device = cameraController.camera!!,
+            device = cameraController.cameraDevice!!,
             targets = cameraController.targets,
             handler = cameraController.cameraHandler
         )
@@ -357,10 +357,10 @@ class CameraController(
         ): CombinedCaptureResult = takePhoto(
             imageReader = cameraController.imageReader!!,
             imageReaderHandler = cameraController.imageReaderHandler,
-            session = cameraController.session!!,
+            session = cameraController.cameraCaptureSession!!,
             cameraHandler = cameraController.cameraHandler,
-            characteristics = cameraController.characteristics!!,
-            coroutineScope = cameraController.cameraCoroutineScope,
+            characteristics = cameraController.selectedCameraCharacteristics!!,
+            coroutineScope = cameraController.cameraScope,
             relativeOrientation = cameraController.relativeOrientation,
             onCaptureStarted = {}
         )

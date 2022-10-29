@@ -40,7 +40,7 @@ fun CameraPreviewLayout(
 
                 override fun surfaceCreated(holder: SurfaceHolder) {
 
-                    cameraController.cameraCoroutineScope.launch {
+                    cameraController.cameraScope.launch {
 
                         val sizes = cameraController.selectedCameraProp.outputSizes
 
@@ -56,7 +56,7 @@ fun CameraPreviewLayout(
                         }
 
                         // Open the selected camera
-                        cameraController.camera = CameraController.openCamera(
+                        cameraController.cameraDevice = CameraController.openCamera(
                             cameraController = cameraController
                         )
 
@@ -73,11 +73,11 @@ fun CameraPreviewLayout(
                         cameraController.targets.addAll(listOf(viewFinder.holder.surface, cameraController.imageReader!!.surface))
 
                         // Start a capture session using our open camera and list of Surfaces where frames will go
-                        cameraController.session = CameraController.createCaptureSession(
+                        cameraController.cameraCaptureSession = CameraController.createCaptureSession(
                             cameraController = cameraController
                         )
 
-                        cameraController.camera?.createCaptureRequest(
+                        cameraController.cameraDevice?.createCaptureRequest(
                             CameraDevice.TEMPLATE_PREVIEW
                         )?.let { captureRequestBuilder ->
 
@@ -85,7 +85,7 @@ fun CameraPreviewLayout(
 
                             // This will keep sending the capture request as frequently as possible until the
                             // session is torn down or session.stopRepeating() is called
-                            cameraController.session?.setRepeatingRequest(
+                            cameraController.cameraCaptureSession?.setRepeatingRequest(
                                 captureRequestBuilder.build(),
                                 null,
                                 cameraController.cameraHandler
