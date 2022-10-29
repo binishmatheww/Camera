@@ -20,6 +20,7 @@ fun rememberCameraController() : CameraController {
         effect = {
 
             onDispose {
+                cameraController.relativeOrientationListener?.disable()
                 cameraController.session?.stopRepeating()
                 cameraController.cameraCoroutineScope.cancel("Recomposition triggered.")
             }

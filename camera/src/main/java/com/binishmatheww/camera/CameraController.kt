@@ -55,11 +55,13 @@ class CameraController(
 
     var session : CameraCaptureSession? = null
 
+    var relativeOrientationListener : OrientationEventListener? = null
+
     var relativeOrientation = 0
 
     init {
 
-        val listener = object : OrientationEventListener(context.applicationContext) {
+        relativeOrientationListener = object : OrientationEventListener(context.applicationContext) {
 
             override fun onOrientationChanged(orientation: Int) {
                 val rotation = when {
@@ -77,7 +79,7 @@ class CameraController(
 
         }
 
-        listener.enable()
+        relativeOrientationListener?.enable()
 
         cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
 
