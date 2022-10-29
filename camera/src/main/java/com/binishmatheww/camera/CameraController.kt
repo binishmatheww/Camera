@@ -92,7 +92,7 @@ class CameraController(
 
     }
 
-    fun selectCamera(cameraProp: CameraProp ){
+    fun selectCamera( cameraProp: CameraProp ){
 
         selectedCameraProp = cameraProp
 
