@@ -17,7 +17,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 fun log(
-    message : String,
+    message : String?,
     throwable: Throwable? = null
 ) = log(
     tag = "com.binishmatheww.camera",
@@ -27,11 +27,11 @@ fun log(
 
 fun log(
     tag : String,
-    message : String,
+    message : String?,
     throwable: Throwable? = null
 ) = Log.wtf(
     tag,
-    message,
+    message.toString(),
     throwable
 )
 
