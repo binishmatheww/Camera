@@ -41,9 +41,9 @@ class CameraController(
 
     var cameraManager : CameraManager
 
-    var availableCameraFormats : List<CameraFormat>
+    var availableCameraProps : List<CameraProp>
 
-    var selectedCameraFormat : CameraFormat
+    var selectedCameraProp : CameraProp
 
     lateinit var characteristics : CameraCharacteristics
 
@@ -81,19 +81,19 @@ class CameraController(
 
         cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
 
-        availableCameraFormats = cameraManager.enumerateCameras()
+        availableCameraProps = cameraManager.enumerateCameras()
 
-        selectedCameraFormat = availableCameraFormats[0]
+        selectedCameraProp = availableCameraProps[0]
 
-        characteristics = cameraManager.getCameraCharacteristics(selectedCameraFormat.cameraId)
+        characteristics = cameraManager.getCameraCharacteristics(selectedCameraProp.cameraId)
 
     }
 
-    fun selectCamera( cameraFormat: CameraFormat ){
+    fun selectCamera(cameraProp: CameraProp ){
 
-        selectedCameraFormat = cameraFormat
+        selectedCameraProp = cameraProp
 
-        characteristics = cameraManager.getCameraCharacteristics(selectedCameraFormat.cameraId)
+        characteristics = cameraManager.getCameraCharacteristics(selectedCameraProp.cameraId)
 
     }
 
@@ -169,7 +169,7 @@ class CameraController(
             cameraController: CameraController
         ) : CameraDevice  = openCamera(
             manager = cameraController.cameraManager,
-            cameraId = cameraController.selectedCameraFormat.cameraId,
+            cameraId = cameraController.selectedCameraProp.cameraId,
             handler = cameraController.cameraHandler
         )
 

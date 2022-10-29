@@ -8,21 +8,42 @@ import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CameraMetadata
 import android.hardware.camera2.CaptureResult
 import android.media.Image
+import android.util.Size
 import android.view.Surface
 import java.io.Closeable
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
+/** Maximum number of images that will be held in the reader's buffer */
+const val IMAGE_BUFFER_SIZE: Int = 3
+
+/** Maximum time allowed to wait for the result of an image capture */
+const val IMAGE_CAPTURE_TIMEOUT_MILLIS: Long = 5000
+
+/** Helper data class used to hold capture metadata with their associated image */
+data class CombinedCaptureResult(
+    val image: Image,
+    val metadata: CaptureResult,
+    val orientation: Int,
+    val format: Int
+) : Closeable {
+    override fun close() = image.close()
+}
 
 /** Helper class used as a data holder for each selectable camera format item */
-data class CameraFormat(val title: String, val cameraId: String, val format: Int)
+data class CameraProp(
+    val title: String,
+    val cameraId: String,
+    val format: Int,
+    val outputSizes: List<Size>
+    )
 
 /** Helper function used to list all compatible cameras and supported pixel formats */
 @SuppressLint("InlinedApi")
-fun CameraManager.enumerateCameras(): List<CameraFormat> {
+fun CameraManager.enumerateCameras(): List<CameraProp> {
 
-    val availableCameras: MutableList<CameraFormat> = mutableListOf()
+    val availableCameras = mutableListOf<CameraProp>()
 
     // Get list of all compatible cameras
     val cameraIds = this.cameraIdList.filter {
@@ -44,49 +65,56 @@ fun CameraManager.enumerateCameras(): List<CameraFormat> {
             else -> "Unknown"
         }
 
+        val streamConfigurationMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+
         // Query the available capabilities and output formats
         val capabilities = characteristics.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES) ?: IntArray(0)
-        val outputFormats = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)?.outputFormats ?: IntArray(0)
+        val outputFormats = streamConfigurationMap?.outputFormats ?: IntArray(0)
 
         // All cameras *must* support JPEG output so we don't need to check characteristics
-        availableCameras.add(CameraFormat("$orientation JPEG ($id)", id, ImageFormat.JPEG))
+        availableCameras.add(
+            CameraProp(
+                title = "$orientation JPEG ($id)",
+                cameraId = id,
+                format = ImageFormat.JPEG,
+                outputSizes = streamConfigurationMap?.getOutputSizes(ImageFormat.JPEG)?.asList() ?: emptyList()
+            )
+        )
 
         // Return cameras that support RAW capability
         if (
-            capabilities.contains(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_RAW) &&
-            outputFormats.contains(ImageFormat.RAW_SENSOR)
+            capabilities.contains(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_RAW)
+            && outputFormats.contains(ImageFormat.RAW_SENSOR)
         ) {
-            availableCameras.add(CameraFormat("$orientation RAW ($id)", id, ImageFormat.RAW_SENSOR))
+            availableCameras.add(
+                CameraProp(
+                    title = "$orientation RAW ($id)",
+                    cameraId = id,
+                    format = ImageFormat.RAW_SENSOR,
+                    outputSizes = streamConfigurationMap?.getOutputSizes(ImageFormat.RAW_SENSOR)?.asList() ?: emptyList()
+                )
+            )
         }
 
         // Return cameras that support JPEG DEPTH capability
         if (
-            capabilities.contains(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_DEPTH_OUTPUT) &&
-            outputFormats.contains(ImageFormat.DEPTH_JPEG)
+            capabilities.contains(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_DEPTH_OUTPUT)
+            && outputFormats.contains(ImageFormat.DEPTH_JPEG)
         ) {
-            availableCameras.add(CameraFormat("$orientation DEPTH ($id)", id, ImageFormat.DEPTH_JPEG))
+            availableCameras.add(
+                CameraProp(
+                    title = "$orientation DEPTH ($id)",
+                    cameraId = id,
+                    format = ImageFormat.DEPTH_JPEG,
+                    outputSizes = streamConfigurationMap?.getOutputSizes(ImageFormat.DEPTH_JPEG)?.asList() ?: emptyList()
+                )
+            )
         }
 
     }
 
     return availableCameras
 
-}
-
-/** Maximum number of images that will be held in the reader's buffer */
-const val IMAGE_BUFFER_SIZE: Int = 3
-
-/** Maximum time allowed to wait for the result of an image capture */
-const val IMAGE_CAPTURE_TIMEOUT_MILLIS: Long = 5000
-
-/** Helper data class used to hold capture metadata with their associated image */
-data class CombinedCaptureResult(
-    val image: Image,
-    val metadata: CaptureResult,
-    val orientation: Int,
-    val format: Int
-) : Closeable {
-    override fun close() = image.close()
 }
 
 /**
