@@ -3,6 +3,8 @@ package com.binishmatheww.camera.composables
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
 import android.media.ImageReader
+import android.util.Log
+import android.util.Size
 import android.view.SurfaceHolder
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -11,7 +13,9 @@ import com.binishmatheww.camera.CameraController
 import com.binishmatheww.camera.utils.AutoFitSurfaceView
 import com.binishmatheww.camera.utils.IMAGE_BUFFER_SIZE
 import com.binishmatheww.camera.utils.getPreviewOutputSize
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun CameraPreviewLayout(
@@ -40,19 +44,22 @@ fun CameraPreviewLayout(
 
                 override fun surfaceCreated(holder: SurfaceHolder) {
 
-                    // Selects appropriate preview size and configures view finder
-                    val previewSize = getPreviewOutputSize(
-                        viewFinder.display,
-                        cameraController.characteristics,
-                        SurfaceHolder::class.java
-                    )
-
-                    viewFinder.setAspectRatio(
-                        previewSize.width,
-                        previewSize.height
-                    )
-
                     cameraController.cameraCoroutineScope.launch {
+
+                        val sizes = cameraController.characteristics
+                            .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+                            ?.getOutputSizes(cameraController.selectedCameraFormat.format) ?: emptyArray()
+
+                        val size = sizes.maxByOrNull { it.height * it.width } ?: sizes.first()
+
+                        withContext(Dispatchers.Main){
+
+                            viewFinder.setAspectRatio(
+                                size.width,
+                                size.height
+                            )
+
+                        }
 
                         // Open the selected camera
                         cameraController.camera = CameraController.openCamera(
@@ -60,11 +67,6 @@ fun CameraPreviewLayout(
                         )
 
                         // Initialize an image reader which will be used to capture still photos
-                        val size = cameraController.characteristics
-                            .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                            ?.getOutputSizes(cameraController.selectedCameraFormat.format)
-                            ?.maxByOrNull { it.height * it.width }!!
-
                         cameraController.imageReader = ImageReader.newInstance(
                             size.width,
                             size.height,
