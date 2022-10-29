@@ -192,9 +192,10 @@ class CameraController(
 
         selectedCameraProp = cameraProp
 
-        selectedCameraCharacteristics = cameraManager.getCameraCharacteristics(selectedCameraProp!!.cameraId)
-
         selectedCameraPropFlow.emit(selectedCameraProp)
+
+        selectedCameraCharacteristics = if(selectedCameraProp == null) null
+        else cameraManager.getCameraCharacteristics(selectedCameraProp!!.cameraId)
 
         availableCameraSizes.clear()
 
