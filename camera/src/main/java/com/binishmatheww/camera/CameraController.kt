@@ -43,7 +43,7 @@ class CameraController(
 
     val availableCameraProps = mutableListOf<CameraProp>()
 
-    var selectedCameraProp : CameraProp
+    var selectedCameraProp : CameraProp? = null
 
     var selectedCameraCharacteristics : CameraCharacteristics? = null
 
@@ -88,7 +88,7 @@ class CameraController(
 
         selectedCameraProp = availableCameraProps[0]
 
-        selectedCameraCharacteristics = cameraManager.getCameraCharacteristics(selectedCameraProp.cameraId)
+        selectedCameraCharacteristics = cameraManager.getCameraCharacteristics(selectedCameraProp!!.cameraId)
 
     }
 
@@ -96,7 +96,7 @@ class CameraController(
 
         selectedCameraProp = cameraProp
 
-        selectedCameraCharacteristics = cameraManager.getCameraCharacteristics(selectedCameraProp.cameraId)
+        selectedCameraCharacteristics = cameraManager.getCameraCharacteristics(selectedCameraProp!!.cameraId)
 
     }
 
@@ -172,7 +172,7 @@ class CameraController(
             cameraController: CameraController
         ) : CameraDevice  = openCamera(
             manager = cameraController.cameraManager,
-            cameraId = cameraController.selectedCameraProp.cameraId,
+            cameraId = cameraController.selectedCameraProp!!.cameraId,
             handler = cameraController.cameraHandler
         )
 
