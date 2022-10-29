@@ -9,12 +9,13 @@ import android.media.ImageReader
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
-import android.util.Log
+import android.util.Size
 import android.view.OrientationEventListener
 import android.view.Surface
 import androidx.exifinterface.media.ExifInterface
 import com.binishmatheww.camera.utils.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -41,15 +42,21 @@ class CameraController(
 
     var cameraManager : CameraManager
 
+    var viewFinder : AutoFitSurfaceView? = null
+
     val availableCameraProps = mutableListOf<CameraProp>()
 
+    val availableCameraPropsFlow = MutableStateFlow<List<CameraProp>>(availableCameraProps)
+
     var selectedCameraProp : CameraProp? = null
+
+    var selectedCameraPropFlow = MutableStateFlow(selectedCameraProp)
 
     var selectedCameraCharacteristics : CameraCharacteristics? = null
 
     var imageReader : ImageReader? = null
 
-    val targets  = mutableListOf<Surface>()
+    val targetSurfaces  = mutableListOf<Surface>()
 
     var cameraDevice : CameraDevice? = null
 
@@ -84,19 +91,97 @@ class CameraController(
         cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
 
         availableCameraProps.clear()
-        availableCameraProps.addAll(cameraManager.enumerateCameras())
+        addAvailableCameraProps(cameraManager.enumerateCameras())
 
-        selectedCameraProp = availableCameraProps[0]
-
-        selectedCameraCharacteristics = cameraManager.getCameraCharacteristics(selectedCameraProp!!.cameraId)
+        selectCamera(availableCameraProps.firstOrNull())
 
     }
 
-    fun selectCamera( cameraProp: CameraProp ){
+    fun initialize(){
+
+        cameraScope.launch {
+
+            val sizes = selectedCameraProp?.outputSizes ?: emptyList()
+
+            val size = sizes.maxByOrNull { it.height * it.width }
+
+            setSize(size)
+
+            // Open the selected camera
+            cameraDevice = openCamera(cameraController = this@CameraController)
+
+            // Creates list of Surfaces where the camera will output frames
+            targetSurfaces.clear()
+            targetSurfaces.addAll(listOf(viewFinder!!.holder.surface, imageReader!!.surface))
+
+            // Start a capture session using our open camera and list of Surfaces where frames will go
+            cameraCaptureSession = createCaptureSession(cameraController = this@CameraController)
+
+            cameraDevice?.createCaptureRequest(
+                CameraDevice.TEMPLATE_PREVIEW
+            )?.let { captureRequestBuilder ->
+
+                captureRequestBuilder.addTarget(viewFinder!!.holder.surface)
+
+                // This will keep sending the capture request as frequently as possible until the
+                // session is torn down or session.stopRepeating() is called
+                cameraCaptureSession?.setRepeatingRequest(
+                    captureRequestBuilder.build(),
+                    null,
+                    cameraHandler
+                )
+
+
+            }
+
+
+        }
+
+    }
+
+    fun addAvailableCameraProp( cameraProp : CameraProp ){
+
+        availableCameraProps.add(cameraProp)
+
+        cameraScope.launch {
+            availableCameraPropsFlow.emit(availableCameraProps)
+        }
+
+    }
+
+    fun addAvailableCameraProps( cameraProps : List<CameraProp> ){
+
+        availableCameraProps.addAll(cameraProps)
+
+        cameraScope.launch {
+            availableCameraPropsFlow.emit(availableCameraProps)
+        }
+
+    }
+
+    fun selectCamera( cameraProp : CameraProp? ){
 
         selectedCameraProp = cameraProp
 
         selectedCameraCharacteristics = cameraManager.getCameraCharacteristics(selectedCameraProp!!.cameraId)
+
+        cameraScope.launch {
+            selectedCameraPropFlow.emit(selectedCameraProp)
+        }
+
+    }
+
+    suspend fun setSize( size: Size? ) = withContext(Dispatchers.Main){
+
+        viewFinder?.setAspectRatio(size!!.width, size.height)
+
+        // Initialize an image reader which will be used to capture still photos
+        imageReader = ImageReader.newInstance(
+            size!!.width,
+            size.height,
+            selectedCameraProp!!.formatId,
+            IMAGE_BUFFER_SIZE
+        )
 
     }
 
@@ -106,7 +191,7 @@ class CameraController(
             cameraController = this
         ).use { result ->
 
-            Log.wtf(TAG, "Result received: $result")
+            log(TAG, "Result received: $result")
 
             // Save the result to disk
             val output = saveResult(
@@ -115,7 +200,7 @@ class CameraController(
                 result = result,
             )
 
-            Log.wtf(TAG, "Image saved: ${output.absolutePath}")
+            log(TAG, "Image saved: ${output.absolutePath}")
 
             // If the result is a JPEG file, update EXIF metadata with orientation info
             if (output.extension == "jpg") {
@@ -123,7 +208,7 @@ class CameraController(
                 exif.setAttribute(
                     ExifInterface.TAG_ORIENTATION, result.orientation.toString())
                 exif.saveAttributes()
-                Log.wtf(TAG, "EXIF metadata saved: ${output.absolutePath}")
+                log(TAG, "EXIF metadata saved: ${output.absolutePath}")
             }
 
         }
@@ -147,7 +232,7 @@ class CameraController(
                 override fun onOpened(device: CameraDevice) = cont.resume(device)
 
                 override fun onDisconnected(device: CameraDevice) {
-                    Log.w(TAG, "Camera $cameraId has been disconnected")
+                    log(TAG, "Camera $cameraId has been disconnected")
                 }
 
                 override fun onError(device: CameraDevice, error: Int) {
@@ -162,7 +247,7 @@ class CameraController(
                     }
 
                     val exc = RuntimeException("Camera $cameraId error: ($error) $msg")
-                    Log.e(TAG, exc.message, exc)
+                    log(TAG, exc.message, exc)
                     if (cont.isActive) cont.resumeWithException(exc)
                 }
             }, handler)
@@ -197,7 +282,7 @@ class CameraController(
 
                     override fun onConfigureFailed(session: CameraCaptureSession) {
                         val exc = RuntimeException("Camera ${device.id} session configuration failed")
-                        Log.e(TAG, exc.message, exc)
+                        log(TAG, exc.message, exc)
                         cont.resumeWithException(exc)
                     }
 
@@ -211,7 +296,7 @@ class CameraController(
             cameraController: CameraController
         ): CameraCaptureSession = createCaptureSession(
             device = cameraController.cameraDevice!!,
-            targets = cameraController.targets,
+            targets = cameraController.targetSurfaces,
             handler = cameraController.cameraHandler
         )
 
@@ -234,14 +319,14 @@ class CameraController(
             // Flush any images left in the image reader
             @Suppress("ControlFlowWithEmptyBody")
             while (imageReader.acquireNextImage() != null) {
-                Log.wtf(TAG,"Flush any images left in the image reader...")
+                log(TAG,"Flush any images left in the image reader...")
             }
 
             // Start a new image queue
             val imageQueue = ArrayBlockingQueue<Image>(IMAGE_BUFFER_SIZE)
             imageReader.setOnImageAvailableListener({ reader ->
                 val image = reader.acquireNextImage()
-                Log.wtf(TAG, "Image available in queue: ${image.timestamp}")
+                log(TAG, "Image available in queue: ${image.timestamp}")
                 imageQueue.add(image)
             }, imageReaderHandler)
 
@@ -266,7 +351,7 @@ class CameraController(
                 ) {
                     super.onCaptureCompleted(session, request, result)
                     val resultTimestamp = result.get(CaptureResult.SENSOR_TIMESTAMP)
-                    Log.wtf(TAG, "Capture result received: $resultTimestamp")
+                    log(TAG, "Capture result received: $resultTimestamp")
 
                     // Set a timeout in case image captured is dropped from the pipeline
                     val exc = TimeoutException("Image dequeuing took too long")
@@ -280,7 +365,7 @@ class CameraController(
                     coroutineScope.launch(cont.context) {
                         while (true) {
 
-                            Log.wtf(TAG, "Dequeue images while timestamps don't match")
+                            log(TAG, "Dequeue images while timestamps don't match")
 
                             // Dequeue images while timestamps don't match
                             val image = imageQueue.take()
@@ -289,7 +374,7 @@ class CameraController(
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
                                 image.format != ImageFormat.DEPTH_JPEG &&
                                 image.timestamp != resultTimestamp) continue
-                            Log.wtf(TAG, "Matching image dequeued: ${image.timestamp}")
+                            log(TAG, "Matching image dequeued: ${image.timestamp}")
 
                             // Unset the image reader listener
                             imageReaderHandler.removeCallbacks(timeoutRunnable)
@@ -297,7 +382,7 @@ class CameraController(
 
                             // Clear the queue of images, if there are left
                             while (imageQueue.size > 0) {
-                                Log.wtf(TAG,"Remaining images in queue : ${imageQueue.size}")
+                                log(TAG,"Remaining images in queue : ${imageQueue.size}")
                                 imageQueue.take().close()
                             }
 
@@ -305,7 +390,7 @@ class CameraController(
                             val mirrored = characteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT
                             val exifOrientation = computeExifOrientation(relativeOrientation, mirrored)
 
-                            Log.wtf(TAG,"Resuming continuation...")
+                            log(TAG,"Resuming continuation...")
 
                             // Build the result and resume progress
                             cont.resume(
@@ -383,7 +468,7 @@ class CameraController(
                         FileOutputStream(output).use { it.write(bytes) }
                         cont.resume(output)
                     } catch (exc: IOException) {
-                        Log.e(TAG, "Unable to write JPEG image to file", exc)
+                        log(TAG, "Unable to write JPEG image to file", exc)
                         cont.resumeWithException(exc)
                     }
                 }
@@ -396,15 +481,15 @@ class CameraController(
                         FileOutputStream(output).use { dngCreator.writeImage(it, result.image) }
                         cont.resume(output)
                     } catch (exc: IOException) {
-                        Log.e(TAG, "Unable to write DNG image to file", exc)
+                        log(TAG, "Unable to write DNG image to file", exc)
                         cont.resumeWithException(exc)
                     }
                 }
 
                 // No other formats are supported by this sample
                 else -> {
-                    val exc = RuntimeException("Unknown image format: ${result.image.format}")
-                    Log.e(TAG, exc.message, exc)
+                    val exc = RuntimeException("${getFormatName(result.image.format)} format is not supported by this library now.")
+                    log(TAG, exc.message, exc)
                     cont.resumeWithException(exc)
                 }
 
