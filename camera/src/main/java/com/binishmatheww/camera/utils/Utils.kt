@@ -16,6 +16,21 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
+fun log(
+    message : String
+) = log(
+    tag = "com.binishmatheww.camera",
+    message = message
+)
+
+fun log(
+    tag : String,
+    message : String
+) = Log.wtf(
+    tag,
+    message
+)
+
 /** Maximum number of images that will be held in the reader's buffer */
 const val IMAGE_BUFFER_SIZE: Int = 3
 
