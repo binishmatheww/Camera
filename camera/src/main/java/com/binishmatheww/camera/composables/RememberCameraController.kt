@@ -14,7 +14,7 @@ fun rememberCameraController() : CameraController {
     val cameraController = remember{ CameraController(context) }
 
     DisposableEffect(
-        key1 = context,
+        key1 = true,
         effect = {
 
             onDispose {
