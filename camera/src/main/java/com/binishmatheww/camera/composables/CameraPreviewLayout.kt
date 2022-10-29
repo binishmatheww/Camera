@@ -69,24 +69,31 @@ fun CameraPreviewLayout(
                         )
 
                         // Creates list of Surfaces where the camera will output frames
-                        cameraController.targets = listOf(viewFinder.holder.surface, cameraController.imageReader.surface)
+                        cameraController.targets.clear()
+                        cameraController.targets.addAll(listOf(viewFinder.holder.surface, cameraController.imageReader!!.surface))
 
                         // Start a capture session using our open camera and list of Surfaces where frames will go
                         cameraController.session = CameraController.createCaptureSession(
                             cameraController = cameraController
                         )
 
-                        val captureRequest = cameraController.camera.createCaptureRequest(
+                        cameraController.camera?.createCaptureRequest(
                             CameraDevice.TEMPLATE_PREVIEW
-                        ).apply { addTarget(viewFinder.holder.surface) }
+                        )?.let { captureRequestBuilder ->
 
-                        // This will keep sending the capture request as frequently as possible until the
-                        // session is torn down or session.stopRepeating() is called
-                        cameraController.session.setRepeatingRequest(
-                            captureRequest.build(),
-                            null,
-                            cameraController.cameraHandler
-                        )
+                            captureRequestBuilder.addTarget(viewFinder.holder.surface)
+
+                            // This will keep sending the capture request as frequently as possible until the
+                            // session is torn down or session.stopRepeating() is called
+                            cameraController.session?.setRepeatingRequest(
+                                captureRequestBuilder.build(),
+                                null,
+                                cameraController.cameraHandler
+                            )
+
+
+                        }
+
 
                     }
 
