@@ -3,8 +3,6 @@ package com.binishmatheww.camera.composables
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
 import android.media.ImageReader
-import android.util.Log
-import android.util.Size
 import android.view.SurfaceHolder
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -12,7 +10,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.binishmatheww.camera.CameraController
 import com.binishmatheww.camera.utils.AutoFitSurfaceView
 import com.binishmatheww.camera.utils.IMAGE_BUFFER_SIZE
-import com.binishmatheww.camera.utils.getPreviewOutputSize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,9 +43,7 @@ fun CameraPreviewLayout(
 
                     cameraController.cameraCoroutineScope.launch {
 
-                        val sizes = cameraController.characteristics
-                            .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                            ?.getOutputSizes(cameraController.selectedCameraFormat.format) ?: emptyArray()
+                        val sizes = cameraController.selectedCameraProp.outputSizes
 
                         val size = sizes.maxByOrNull { it.height * it.width } ?: sizes.first()
 
@@ -70,7 +65,7 @@ fun CameraPreviewLayout(
                         cameraController.imageReader = ImageReader.newInstance(
                             size.width,
                             size.height,
-                            cameraController.selectedCameraFormat.format,
+                            cameraController.selectedCameraProp.format,
                             IMAGE_BUFFER_SIZE
                         )
 
