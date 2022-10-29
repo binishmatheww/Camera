@@ -17,18 +17,22 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 fun log(
-    message : String
+    message : String,
+    throwable: Throwable? = null
 ) = log(
     tag = "com.binishmatheww.camera",
-    message = message
+    message = message,
+    throwable = throwable
 )
 
 fun log(
     tag : String,
-    message : String
+    message : String,
+    throwable: Throwable? = null
 ) = Log.wtf(
     tag,
-    message
+    message,
+    throwable
 )
 
 /** Maximum number of images that will be held in the reader's buffer */
