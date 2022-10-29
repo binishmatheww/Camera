@@ -19,6 +19,7 @@ package com.binishmatheww.camera.utils
 import android.graphics.Point
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.params.StreamConfigurationMap
+import android.util.Log
 import android.util.Size
 import android.view.Display
 import kotlin.math.max
@@ -73,8 +74,8 @@ fun <T>getPreviewOutputSize(
 
     // Get available sizes and sort them by area from largest to smallest
     val validSizes = allSizes
-            .sortedWith(compareBy { it.height * it.width })
-            .map { SmartSize(it.width, it.height) }.reversed()
+        .sortedByDescending { it.height * it.width }
+        .map { SmartSize(it.width, it.height) }
 
     // Then, get the largest output size that is smaller or equal than our max size
     return validSizes.first { it.long <= maxSize.long && it.short <= maxSize.short }.size
