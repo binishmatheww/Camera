@@ -42,7 +42,7 @@ fun CameraPreviewLayout(
 
                     cameraController.cameraScope.launch {
 
-                        val sizes = cameraController.selectedCameraProp.outputSizes
+                        val sizes = cameraController.selectedCameraProp?.outputSizes ?: emptyList()
 
                         val size = sizes.maxByOrNull { it.height * it.width } ?: sizes.first()
 
@@ -64,7 +64,7 @@ fun CameraPreviewLayout(
                         cameraController.imageReader = ImageReader.newInstance(
                             size.width,
                             size.height,
-                            cameraController.selectedCameraProp.formatId,
+                            cameraController.selectedCameraProp!!.formatId,
                             IMAGE_BUFFER_SIZE
                         )
 
