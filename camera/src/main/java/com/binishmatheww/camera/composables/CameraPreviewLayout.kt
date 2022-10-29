@@ -1,6 +1,5 @@
 package com.binishmatheww.camera.composables
 
-import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
 import android.media.ImageReader
 import android.view.SurfaceHolder
@@ -65,7 +64,7 @@ fun CameraPreviewLayout(
                         cameraController.imageReader = ImageReader.newInstance(
                             size.width,
                             size.height,
-                            cameraController.selectedCameraProp.format,
+                            cameraController.selectedCameraProp.formatId,
                             IMAGE_BUFFER_SIZE
                         )
 

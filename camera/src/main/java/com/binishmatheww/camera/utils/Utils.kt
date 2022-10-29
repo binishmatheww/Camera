@@ -8,6 +8,7 @@ import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CameraMetadata
 import android.hardware.camera2.CaptureResult
 import android.media.Image
+import android.util.Log
 import android.util.Size
 import android.view.Surface
 import java.io.Closeable
@@ -33,9 +34,10 @@ data class CombinedCaptureResult(
 
 /** Helper class used as a data holder for each selectable camera format item */
 data class CameraProp(
-    val title: String,
     val cameraId: String,
-    val format: Int,
+    val orientationId: Int,
+    val formatId: Int,
+    val formatName: String,
     val outputSizes: List<Size>
     )
 
@@ -58,62 +60,97 @@ fun CameraManager.enumerateCameras(): List<CameraProp> {
 
         val characteristics = this.getCameraCharacteristics(id)
 
-        val orientation = when(characteristics.get(CameraCharacteristics.LENS_FACING)!!) {
-            CameraCharacteristics.LENS_FACING_BACK -> "Back"
-            CameraCharacteristics.LENS_FACING_FRONT -> "Front"
-            CameraCharacteristics.LENS_FACING_EXTERNAL -> "External"
-            else -> "Unknown"
-        }
+        val orientationId = characteristics.get(CameraCharacteristics.LENS_FACING) ?: -1
 
         val streamConfigurationMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
 
-        // Query the available capabilities and output formats
-        val capabilities = characteristics.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES) ?: IntArray(0)
+        // Query the available output formats
         val outputFormats = streamConfigurationMap?.outputFormats ?: IntArray(0)
 
-        // All cameras *must* support JPEG output so we don't need to check characteristics
-        availableCameras.add(
-            CameraProp(
-                title = "$orientation JPEG ($id)",
-                cameraId = id,
-                format = ImageFormat.JPEG,
-                outputSizes = streamConfigurationMap?.getOutputSizes(ImageFormat.JPEG)?.asList() ?: emptyList()
-            )
-        )
+        outputFormats.forEach { formatId ->
 
-        // Return cameras that support RAW capability
-        if (
-            capabilities.contains(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_RAW)
-            && outputFormats.contains(ImageFormat.RAW_SENSOR)
-        ) {
             availableCameras.add(
                 CameraProp(
-                    title = "$orientation RAW ($id)",
                     cameraId = id,
-                    format = ImageFormat.RAW_SENSOR,
-                    outputSizes = streamConfigurationMap?.getOutputSizes(ImageFormat.RAW_SENSOR)?.asList() ?: emptyList()
+                    orientationId = orientationId,
+                    formatId = formatId,
+                    formatName = "${getOrientation(orientationId)} ${getFormatName(formatId)}",
+                    outputSizes = streamConfigurationMap?.getOutputSizes(formatId)?.asList() ?: emptyList()
                 )
             )
-        }
 
-        // Return cameras that support JPEG DEPTH capability
-        if (
-            capabilities.contains(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_DEPTH_OUTPUT)
-            && outputFormats.contains(ImageFormat.DEPTH_JPEG)
-        ) {
-            availableCameras.add(
-                CameraProp(
-                    title = "$orientation DEPTH ($id)",
-                    cameraId = id,
-                    format = ImageFormat.DEPTH_JPEG,
-                    outputSizes = streamConfigurationMap?.getOutputSizes(ImageFormat.DEPTH_JPEG)?.asList() ?: emptyList()
-                )
-            )
         }
 
     }
 
     return availableCameras
+
+}
+
+fun getFormatName( int : Int ) : String {
+
+    return when(int){
+
+        ImageFormat.JPEG -> "JPEG"
+
+        ImageFormat.DEPTH_JPEG -> "DEPTH_JPEG"
+
+        ImageFormat.DEPTH16 -> "DEPTH16"
+
+        ImageFormat.DEPTH_POINT_CLOUD -> "DEPTH_POINT_CLOUD"
+
+        ImageFormat.RAW_SENSOR -> "RAW_SENSOR"
+
+        ImageFormat.RAW10 -> "RAW10"
+
+        ImageFormat.RAW12 -> "RAW12"
+
+        ImageFormat.RAW_PRIVATE -> "RAW_PRIVATE"
+
+        ImageFormat.FLEX_RGBA_8888 -> "FLEX_RGBA_8888"
+
+        ImageFormat.FLEX_RGB_888 -> "FLEX_RGB_888"
+
+        ImageFormat.HEIC -> "HEIC"
+
+        ImageFormat.NV16 -> "NV16"
+
+        ImageFormat.NV21 -> "NV21"
+
+        ImageFormat.RGB_565 -> "RGB_565"
+
+        ImageFormat.Y8 -> "Y8"
+
+        ImageFormat.YCBCR_P010 -> "YCBCR_P010"
+
+        ImageFormat.YUV_420_888 -> "YUV_420_888"
+
+        ImageFormat.YUV_422_888 -> "YUV_422_888"
+
+        ImageFormat.YUV_444_888 -> "YUV_444_888"
+
+        ImageFormat.YUY2 -> "YUY2"
+
+        ImageFormat.YV12 -> "YV12"
+
+        ImageFormat.PRIVATE -> "PRIVATE"
+
+        ImageFormat.UNKNOWN -> "UNKNOWN"
+
+        else -> "UNKNOWN($int)"
+
+    }
+
+}
+
+fun getOrientation( int : Int ) : String{
+
+    return when(int) {
+        CameraCharacteristics.LENS_FACING_BACK -> "Back"
+        CameraCharacteristics.LENS_FACING_FRONT -> "Front"
+        CameraCharacteristics.LENS_FACING_EXTERNAL -> "External"
+        else -> "Unknown"
+    }
 
 }
 
