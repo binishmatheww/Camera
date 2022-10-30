@@ -9,10 +9,6 @@
 
 <br>
 
-> :warning: **This library is still under development**: Do not use this in production!
-
-<br>
-
 The [Camera2][1] API allows users to capture RAW images, i.e. unprocessed pixel data
 directly from the camera sensor that has not yet been converted into a format and
 colorspace typically used for displaying and storing images viewed by humans.
@@ -29,6 +25,10 @@ This lib usees code from [Camera2Basic][4] sample by google.
 [2]: https://developer.android.com/reference/android/hardware/camera2/DngCreator.html
 [3]: https://developer.android.com/jetpack/compose
 [4]: https://github.com/android/camera-samples/tree/main/Camera2Basic
+
+<br>
+
+> :warning: **This library is still under development**: Do not use this in production!
 
 <br>
 
