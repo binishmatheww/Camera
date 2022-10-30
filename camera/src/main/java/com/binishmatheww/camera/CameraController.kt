@@ -12,6 +12,7 @@ import android.os.HandlerThread
 import android.util.Size
 import android.view.OrientationEventListener
 import android.view.Surface
+import androidx.compose.runtime.toMutableStateList
 import androidx.exifinterface.media.ExifInterface
 import com.binishmatheww.camera.utils.*
 import kotlinx.coroutines.*
@@ -54,11 +55,11 @@ class CameraController(
 
     var selectedCameraCharacteristics : CameraCharacteristics? = null
 
-    val availableCameraSizes = mutableListOf<Size>()
+    val availableCameraSizes = mutableListOf<SmartSize>()
 
-    val availableCameraSizesFlow = MutableStateFlow<List<Size>>(availableCameraSizes)
+    val availableCameraSizesFlow = MutableStateFlow<List<SmartSize>>(availableCameraSizes)
 
-    var selectedCameraSize : Size? = null
+    var selectedCameraSize : SmartSize? = null
 
     var selectedCameraSizeFlow = MutableStateFlow(selectedCameraSize)
 
@@ -114,6 +115,8 @@ class CameraController(
         cameraScope.launch {
 
             setSize(selectedCameraSize)
+
+            cameraDevice?.close()
 
             // Open the selected camera
             cameraDevice = openCamera(cameraController = this@CameraController)
@@ -172,11 +175,13 @@ class CameraController(
 
     }
 
-    suspend fun addAvailableCameraProp( cameraProp : CameraProp ){
+    suspend fun addAvailableCameraProp( cameraProp : CameraProp? ){
 
-        availableCameraProps.add(cameraProp)
+        if ( cameraProp != null ){
+            availableCameraProps.add(cameraProp)
+        }
 
-        availableCameraPropsFlow.emit(availableCameraProps)
+        addAvailableCameraProps(availableCameraProps)
 
     }
 
@@ -184,7 +189,7 @@ class CameraController(
 
         availableCameraProps.addAll(cameraProps)
 
-        availableCameraPropsFlow.emit(availableCameraProps)
+        availableCameraPropsFlow.emit(cameraProps)
 
     }
 
@@ -194,48 +199,49 @@ class CameraController(
 
         selectedCameraPropFlow.emit(selectedCameraProp)
 
-        selectedCameraCharacteristics = if(selectedCameraProp == null) null
-        else cameraManager.getCameraCharacteristics(selectedCameraProp!!.cameraId)
-
         availableCameraSizes.clear()
 
-        addAvailableCameraSizes(selectedCameraProp?.outputSizes)
+        selectedCameraProp?.let { prop ->
+
+            selectedCameraCharacteristics = cameraManager.getCameraCharacteristics(prop.cameraId)
+
+            addAvailableCameraSizes(prop.outputSizes)
+
+        }
 
 
     }
 
-    suspend fun addAvailableCameraSize( size : Size? ){
+    suspend fun addAvailableCameraSize( size : SmartSize? ){
 
         if(size != null){
 
             availableCameraSizes.add(size)
 
-            availableCameraSizesFlow.emit(availableCameraSizes)
-
         }
+
+        addAvailableCameraSizes(availableCameraSizes)
 
     }
 
-    suspend fun addAvailableCameraSizes( sizes : List<Size>? ){
+    suspend fun addAvailableCameraSizes( sizes : List<SmartSize> ){
 
-        sizes?.let {
-            availableCameraSizes.addAll(it)
-        }
+        availableCameraSizes.addAll(sizes)
 
-        availableCameraSizesFlow.emit(availableCameraSizes)
+        availableCameraSizesFlow.emit(sizes)
 
     }
 
-    suspend fun setSize( inputSize : Size? ) = withContext(Dispatchers.Main){
+    suspend fun setSize( inputSize : SmartSize? ) = withContext(Dispatchers.Main){
 
-        selectedCameraSize = inputSize ?: selectedCameraProp?.outputSizes?.maxByOrNull { it.height * it.width }
+        selectedCameraSize = inputSize ?: selectedCameraProp?.outputSizes?.maxByOrNull { it.size.height * it.size.width }
 
-        viewFinder?.setAspectRatio(selectedCameraSize!!.width, selectedCameraSize!!.height)
+        viewFinder?.setAspectRatio(selectedCameraSize!!.size.width, selectedCameraSize!!.size.height)
 
         // Initialize an image reader which will be used to capture still photos
         imageReader = ImageReader.newInstance(
-            selectedCameraSize!!.width,
-            selectedCameraSize!!.height,
+            selectedCameraSize!!.size.width,
+            selectedCameraSize!!.size.height,
             selectedCameraProp!!.formatId,
             IMAGE_BUFFER_SIZE
         )

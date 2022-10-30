@@ -20,7 +20,10 @@ import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.binishmatheww.camera.composables.CameraPreviewLayout
 import com.binishmatheww.camera.composables.rememberCameraController
+import com.binishmatheww.camera.utils.CameraProp
+import com.binishmatheww.camera.utils.SmartSize
 import com.binishmatheww.camera.utils.log
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class LauncherActivity : AppCompatActivity() {
@@ -55,72 +58,6 @@ class LauncherActivity : AppCompatActivity() {
 
                 var isCaptureButtonEnabled by remember { mutableStateOf(true) }
 
-                LazyRow(
-                    modifier = Modifier
-                        .constrainAs(cameraPropsConstraint){
-                            top.linkTo(parent.top)
-                            linkTo(start = parent.start, end = parent.end)
-                        },
-                   ){
-
-                    items(availableCameraProps){ cameraProp ->
-
-                        Button(
-                            modifier = Modifier
-                                .height(32.dp)
-                                .padding(
-                                    horizontal = 8.dp
-                                ),
-                            onClick = {
-                                cameraController.cameraScope.launch {
-                                    cameraController.selectCamera(cameraProp)
-                                    cameraController.setSize(cameraProp.outputSizes.firstOrNull())
-                                }
-                            },
-                            colors = buttonColors(
-                                contentColor = Color.Black,
-                                backgroundColor = if(cameraProp == selectedCameraProp) Color.Green else Color.Gray
-                            )
-                        ) {
-                            Text(text = cameraProp.formatName)
-                        }
-                    }
-
-                }
-
-                LazyRow(
-                    modifier = Modifier
-                        .constrainAs(cameraSizesConstraint){
-                            top.linkTo(cameraPropsConstraint.bottom, 12.dp)
-                            linkTo(start = parent.start, end = parent.end)
-                        },
-                ){
-
-                    items(availableCameraSizes){ cameraSize ->
-
-                        Button(
-                            modifier = Modifier
-                                .height(32.dp)
-                                .padding(
-                                    horizontal = 8.dp
-                                ),
-                            onClick = {
-                                cameraController.cameraScope.launch {
-                                    cameraController.setSize(cameraSize)
-                                }
-                            },
-                            colors = buttonColors(
-                                contentColor = Color.Black,
-                                backgroundColor = if(cameraSize == selectedCameraSize) Color.Green else Color.Gray
-                            )
-                        ) {
-                            Text(text = "${cameraSize.width} x ${cameraSize.height}")
-                        }
-
-                    }
-
-                }
-
                 CameraPreviewLayout(
                     modifier = Modifier
                         .constrainAs(cameraPreviewLayoutConstraint){
@@ -128,6 +65,38 @@ class LauncherActivity : AppCompatActivity() {
                             linkTo(start = parent.start, end = parent.end)
                         },
                     cameraController = cameraController,
+                )
+
+                CameraPropsLayout(
+                    modifier = Modifier
+                        .constrainAs(cameraPropsConstraint){
+                            top.linkTo(parent.top)
+                            linkTo(start = parent.start, end = parent.end)
+                        },
+                    availableCameraProps = availableCameraProps,
+                    selectedCameraProp = selectedCameraProp,
+                    onCameraPropSelected = { cameraProp ->
+                        cameraController.cameraScope.launch {
+                            cameraController.selectCamera(cameraProp)
+                            cameraController.setSize(cameraProp.outputSizes.firstOrNull())
+                            cameraController.initialize()
+                        }
+                    }
+                )
+
+                CameraSizesLayout(
+                    modifier = Modifier
+                        .constrainAs(cameraSizesConstraint){
+                            top.linkTo(cameraPropsConstraint.bottom, 12.dp)
+                            linkTo(start = parent.start, end = parent.end)
+                        },
+                    availableCameraSizes = availableCameraSizes,
+                    selectedCameraSize = selectedCameraSize,
+                    onCameraSizeSelected = { cameraSize ->
+                        cameraController.cameraScope.launch {
+                            cameraController.setSize(cameraSize)
+                        }
+                    }
                 )
 
                 Button(
@@ -154,6 +123,83 @@ class LauncherActivity : AppCompatActivity() {
                         text = "Capture"
                     )
 
+                }
+
+            }
+
+        }
+
+    }
+
+    @Composable
+    fun CameraPropsLayout(
+        modifier: Modifier,
+        availableCameraProps : List<CameraProp>,
+        selectedCameraProp : CameraProp?,
+        onCameraPropSelected : (CameraProp) -> Unit
+    ){
+
+        LazyRow(
+            modifier = modifier,
+        ){
+
+            items(
+                items = availableCameraProps,
+            ){ cameraProp ->
+
+                Button(
+                    modifier = Modifier
+                        .height(32.dp)
+                        .padding(
+                            horizontal = 8.dp
+                        ),
+                    onClick = {
+                        onCameraPropSelected.invoke(cameraProp)
+                    },
+                    colors = buttonColors(
+                        contentColor = Color.Black,
+                        backgroundColor = if(cameraProp == selectedCameraProp) Color.Green else Color.Gray
+                    )
+                ) {
+                    Text(text = cameraProp.formatName)
+                }
+            }
+
+        }
+
+    }
+
+    @Composable
+    fun CameraSizesLayout(
+        modifier: Modifier,
+        availableCameraSizes: List<SmartSize>,
+        selectedCameraSize: SmartSize?,
+        onCameraSizeSelected : (SmartSize) -> Unit
+    ){
+
+        LazyRow(
+            modifier = modifier,
+        ){
+
+            items(
+                items = availableCameraSizes,
+            ){ cameraSize ->
+
+                Button(
+                    modifier = Modifier
+                        .height(32.dp)
+                        .padding(
+                            horizontal = 8.dp
+                        ),
+                    onClick = {
+                        onCameraSizeSelected.invoke(cameraSize)
+                    },
+                    colors = buttonColors(
+                        contentColor = Color.Black,
+                        backgroundColor = if(cameraSize == selectedCameraSize) Color.Green else Color.Gray
+                    )
+                ) {
+                    Text(text = "${cameraSize.size.width} x ${cameraSize.size.height}")
                 }
 
             }
