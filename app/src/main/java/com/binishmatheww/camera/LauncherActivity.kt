@@ -1,8 +1,8 @@
 package com.binishmatheww.camera
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.activity.compose.setContent
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -22,8 +22,6 @@ import com.binishmatheww.camera.composables.CameraPreviewLayout
 import com.binishmatheww.camera.composables.rememberCameraController
 import com.binishmatheww.camera.utils.CameraProp
 import com.binishmatheww.camera.utils.SmartSize
-import com.binishmatheww.camera.utils.log
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class LauncherActivity : AppCompatActivity() {
@@ -78,7 +76,7 @@ class LauncherActivity : AppCompatActivity() {
                     onCameraPropSelected = { cameraProp ->
                         cameraController.cameraScope.launch {
                             cameraController.selectCamera(cameraProp)
-                            cameraController.setSize(cameraProp.outputSizes.firstOrNull())
+                            cameraController.setSize(cameraProp?.outputSizes?.firstOrNull())
                             cameraController.initialize()
                         }
                     }
@@ -136,7 +134,7 @@ class LauncherActivity : AppCompatActivity() {
         modifier: Modifier,
         availableCameraProps : List<CameraProp>,
         selectedCameraProp : CameraProp?,
-        onCameraPropSelected : (CameraProp) -> Unit
+        onCameraPropSelected : (CameraProp?) -> Unit
     ){
 
         LazyRow(
