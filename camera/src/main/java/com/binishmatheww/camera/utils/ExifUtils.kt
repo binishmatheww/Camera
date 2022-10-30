@@ -65,7 +65,7 @@ fun decodeExifOrientation(exifOrientation: Int): Matrix {
         }
 
         // Error out if the EXIF orientation is invalid
-        else -> Log.e(TAG, "Invalid orientation: $exifOrientation")
+        else -> log(TAG, "Invalid orientation: $exifOrientation")
     }
 
     // Return the resulting matrix

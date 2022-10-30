@@ -81,12 +81,13 @@ class AutoFitSurfaceView @JvmOverloads constructor(
             if (width < height * actualRatio) {
                 newWidth = width
                 newHeight = (width / actualRatio).roundToInt()
+                log(TAG, "Width < height * actualRatio. Measured dimensions: $newWidth x $newHeight")
             } else {
                 newHeight = height
                 newWidth = (height * actualRatio).roundToInt()
+                log(TAG, "Width > height * actualRatio. Measured dimensions: $newWidth x $newHeight")
             }
 
-            Log.wtf(TAG, "Measured dimensions: $newWidth x $newHeight")
             setMeasuredDimension(newWidth, newHeight)
 
         }
