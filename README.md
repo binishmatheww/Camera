@@ -1,13 +1,15 @@
 <h1 align="center">Camera</h1></br>
 
-> :warning: **This library is still under development**: Do not use this in production!
-
 <br>
 <br>
 
 <p align="center">
     <b>Camera</b> is a library for Android built using the Camera2 API.
 </p>
+
+<br>
+
+> :warning: **This library is still under development**: Do not use this in production!
 
 <br>
 
@@ -98,7 +100,7 @@ submitting a pull request through GitHub.
 
 # License
 ```xml
-Copyright 2022 Binish Mathew and The Android Open Source Project
+Copyright 2022 Binish Mathew
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
