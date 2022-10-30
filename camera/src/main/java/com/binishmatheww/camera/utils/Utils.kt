@@ -57,7 +57,7 @@ data class CameraProp(
     val orientationId: Int,
     val formatId: Int,
     val formatName: String,
-    val outputSizes: List<Size>
+    val outputSizes: List<SmartSize>
     )
 
 /** Helper function used to list all compatible cameras and supported pixel formats */
@@ -94,7 +94,7 @@ fun CameraManager.enumerateCameras(): List<CameraProp> {
                     orientationId = orientationId,
                     formatId = formatId,
                     formatName = "${getOrientation(orientationId)} ${getFormatName(formatId)}",
-                    outputSizes = streamConfigurationMap?.getOutputSizes(formatId)?.asList() ?: emptyList()
+                    outputSizes = streamConfigurationMap?.getOutputSizes(formatId)?.asList()?.map { SmartSize(it.width,it.height) } ?: emptyList()
                 )
             )
 
