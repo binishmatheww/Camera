@@ -1,4 +1,4 @@
-package com.binishmatheww.camera
+package com.binishmatheww.cam
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

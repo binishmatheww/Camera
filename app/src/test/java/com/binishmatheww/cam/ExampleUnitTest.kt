@@ -1,4 +1,4 @@
-package com.binishmatheww.camera
+package com.binishmatheww.cam
 
 import org.junit.Test
 

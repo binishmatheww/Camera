@@ -5,7 +5,7 @@ plugins {
 
 android {
 
-    namespace 'com.binishmatheww.camera'
+    namespace 'com.binishmatheww.cam'
 
     compileSdk 33
 
@@ -20,7 +20,7 @@ android {
 
     defaultConfig {
 
-        applicationId "com.binishmatheww.camera"
+        applicationId "com.binishmatheww.cam"
 
         minSdk 21
 
@@ -103,6 +103,9 @@ android {
 }
 
 dependencies {
+
+    // Junit
+    testImplementation 'junit:junit:4.13.2'
 
     // Camera
     implementation project(path: ':camera')
