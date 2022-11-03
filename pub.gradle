@@ -23,14 +23,10 @@ group = GROUP
 android{
     publishing {
         singleVariant('release') {
-            withSourcesJar()
-            withJavadocJar()
+            //withSourcesJar()
+            //withJavadocJar()
         }
     }
-}
-
-def isReleaseBuild() {
-    return !VERSION_NAME.contains("SNAPSHOT")
 }
 
 def getReleaseRepositoryUrl() {
@@ -93,7 +89,7 @@ afterEvaluate { project ->
             maven {
                 def releasesRepoUrl = getReleaseRepositoryUrl()
                 def snapshotsRepoUrl = getSnapshotRepositoryUrl()
-                url = isReleaseBuild() ? releasesRepoUrl : snapshotsRepoUrl
+                url = VERSION_NAME.contains("SNAPSHOT") ? snapshotsRepoUrl : releasesRepoUrl
 
                 credentials(PasswordCredentials) {
                     username = getRepositoryUsername()
