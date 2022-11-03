@@ -80,7 +80,15 @@ def configurePom(pom) {
 }
 
 afterEvaluate { project ->
+
     publishing {
+
+        publications {
+            cameraLib(MavenPublication) {
+                from components.release
+            }
+        }
+
         repositories {
             maven {
                 def releasesRepoUrl = getReleaseRepositoryUrl()
@@ -105,12 +113,14 @@ afterEvaluate { project ->
         }
 
         task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
-            classifier = 'javadoc'
+            archiveClassifier.set("javadoc")
+            //classifier = 'javadoc'
             from androidJavadocs.destinationDir
         }
 
         task androidSourcesJar(type: Jar) {
-            classifier = 'sources'
+            archiveClassifier.set("sources")
+            //classifier = 'sources'
             from android.sourceSets.main.java.source
         }
     }
@@ -160,4 +170,5 @@ afterEvaluate { project ->
             sign publication
         }
     }
+
 }
