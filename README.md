@@ -32,6 +32,19 @@ This lib usees code from [Camera2Basic][4] sample by google.
 
 <br>
 
+### Gradle
+
+Add the dependency below to your **module**'s `build.gradle` file:
+```gradle
+dependencies {
+    implementation "com.binishmatheww:camera:<version>"
+}
+```
+
+> **Note**: Please make sure that your project uses Jetpack Compose `1.3.0`, Compose Compiler `1.3.2`, and Kotlin `1.7.20`.
+
+<br>
+
 ### Usage
 Use `CameraPreviewLayout` composable to preview frames from the camera.
 You must pass a `CameraController` to the composable.
