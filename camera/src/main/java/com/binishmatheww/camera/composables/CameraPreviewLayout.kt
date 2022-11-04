@@ -9,8 +9,8 @@ import com.binishmatheww.camera.utils.AutoFitSurfaceView
 
 @Composable
 fun CameraPreviewLayout(
+    modifier: Modifier = Modifier,
     cameraController: CameraController,
-    modifier: Modifier = Modifier
 ) {
 
     AndroidView(

@@ -9,10 +9,8 @@ import android.media.ImageReader
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
-import android.util.Size
 import android.view.OrientationEventListener
 import android.view.Surface
-import androidx.compose.runtime.toMutableStateList
 import androidx.exifinterface.media.ExifInterface
 import com.binishmatheww.camera.utils.*
 import kotlinx.coroutines.*
@@ -44,6 +42,10 @@ class CameraController(
     var cameraManager : CameraManager
 
     var viewFinder : AutoFitSurfaceView? = null
+
+    val requiredFormats = mutableListOf<Int>()
+
+    val requiredOrientations = mutableListOf<Int>()
 
     val availableCameraProps = mutableListOf<CameraProp>()
 
@@ -102,10 +104,8 @@ class CameraController(
         availableCameraProps.clear()
 
         cameraScope.launch {
-
-            addAvailableCameraProps(cameraManager.enumerateCameras())
-            selectCamera(availableCameraProps.firstOrNull())
-
+            addRequiredOrientations(null)
+            addRequiredFormats(null)
         }
 
     }
@@ -114,7 +114,7 @@ class CameraController(
 
         cameraScope.launch {
 
-            setSize(selectedCameraSize)
+            selectSize(selectedCameraSize)
 
             cameraDevice?.close()
 
@@ -175,6 +175,59 @@ class CameraController(
 
     }
 
+    suspend fun addRequiredOrientations( orientations : List<Int>? ){
+
+        if (orientations != null) {
+            requiredOrientations.addAll(orientations)
+        }
+        else{
+            requiredOrientations.clear()
+        }
+
+        addAvailableCameraProps(
+            cameraManager
+                .enumerateCameras()
+                .filter {
+                    if(requiredOrientations.isEmpty()) true
+                    else requiredOrientations.contains(it.orientationId)
+                }
+                .filter {
+                    if(requiredFormats.isEmpty()) true
+                    else requiredFormats.contains(it.formatId)
+                }.also {
+                    selectCamera(it.firstOrNull())
+                }
+        )
+
+    }
+
+    suspend fun addRequiredFormats( formats : List<Int>? ){
+
+        if (formats != null) {
+            requiredFormats.addAll(formats)
+        }
+        else{
+            requiredFormats.clear()
+        }
+
+        addAvailableCameraProps(
+            cameraManager
+                .enumerateCameras()
+                .filter {
+                    if(requiredOrientations.isEmpty()) true
+                    else requiredOrientations.contains(it.orientationId)
+                }
+                .filter {
+                    if(requiredFormats.isEmpty()) true
+                    else requiredFormats.contains(it.formatId)
+                }
+                .also {
+                    selectCamera(it.firstOrNull())
+                }
+        )
+
+    }
+
     suspend fun addAvailableCameraProp( cameraProp : CameraProp? ){
 
         if ( cameraProp != null ){
@@ -232,7 +285,7 @@ class CameraController(
 
     }
 
-    suspend fun setSize( inputSize : SmartSize? ) = withContext(Dispatchers.Main){
+    suspend fun selectSize(inputSize : SmartSize? ) = withContext(Dispatchers.Main){
 
         selectedCameraSize = inputSize ?: selectedCameraProp?.outputSizes?.maxByOrNull { it.size.height * it.size.width }
 
