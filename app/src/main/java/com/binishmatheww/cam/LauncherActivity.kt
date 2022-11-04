@@ -1,5 +1,7 @@
 package com.binishmatheww.cam
 
+import android.graphics.ImageFormat
+import android.hardware.camera2.CameraCharacteristics
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -46,6 +48,14 @@ class LauncherActivity : AppCompatActivity() {
 
                 val cameraController = rememberCameraController()
 
+                LaunchedEffect(
+                    key1 = cameraController,
+                    block = {
+                        cameraController.addRequiredOrientations(listOf(CameraCharacteristics.LENS_FACING_BACK))
+                        cameraController.addRequiredFormats(listOf(ImageFormat.JPEG))
+                    }
+                )
+
                 val availableCameraProps by cameraController.availableCameraPropsFlow.collectAsStateWithLifecycle()
 
                 val selectedCameraProp by cameraController.selectedCameraPropFlow.collectAsStateWithLifecycle()
@@ -76,7 +86,7 @@ class LauncherActivity : AppCompatActivity() {
                     onCameraPropSelected = { cameraProp ->
                         cameraController.cameraScope.launch {
                             cameraController.selectCamera(cameraProp)
-                            cameraController.setSize(cameraProp?.outputSizes?.firstOrNull())
+                            cameraController.selectSize(cameraProp?.outputSizes?.firstOrNull())
                             cameraController.initialize()
                         }
                     }
@@ -92,7 +102,7 @@ class LauncherActivity : AppCompatActivity() {
                     selectedCameraSize = selectedCameraSize,
                     onCameraSizeSelected = { cameraSize ->
                         cameraController.cameraScope.launch {
-                            cameraController.setSize(cameraSize)
+                            cameraController.selectSize(cameraSize)
                         }
                     }
                 )
