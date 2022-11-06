@@ -11,9 +11,9 @@ import com.binishmatheww.camera.utils.AutoFitSurfaceView
 fun CameraPreviewLayout(
     modifier: Modifier = Modifier,
     cameraController: CameraController,
-    surfaceDestroyed : () -> Unit = { },
-    surfaceChanged : (Int, Int) -> Unit = { _, _ -> },
-    surfaceCreated : () -> Unit = { },
+    onSurfaceDestroyed : () -> Unit = { },
+    onSurfaceChanged : (Int, Int) -> Unit = { _, _ -> },
+    onSurfaceCreated : () -> Unit = { },
 ) {
 
     AndroidView(
@@ -26,18 +26,18 @@ fun CameraPreviewLayout(
 
                 override fun surfaceDestroyed(
                     holder: SurfaceHolder
-                ) = surfaceDestroyed.invoke()
+                ) = onSurfaceDestroyed.invoke()
 
                 override fun surfaceChanged(
                     holder: SurfaceHolder,
                     format: Int,
                     width: Int,
                     height: Int
-                ) = surfaceChanged.invoke(width, height)
+                ) = onSurfaceChanged.invoke(width, height)
 
                 override fun surfaceCreated(holder: SurfaceHolder) {
 
-                    surfaceCreated.invoke()
+                    onSurfaceCreated.invoke()
 
                     cameraController.initialize()
 
