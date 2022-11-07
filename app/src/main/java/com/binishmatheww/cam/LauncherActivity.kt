@@ -24,6 +24,7 @@ import com.binishmatheww.camera.composables.CameraPreviewLayout
 import com.binishmatheww.camera.composables.rememberCameraController
 import com.binishmatheww.camera.utils.CameraProp
 import com.binishmatheww.camera.utils.SmartSize
+import com.binishmatheww.camera.utils.log
 import kotlinx.coroutines.launch
 
 class LauncherActivity : AppCompatActivity() {
@@ -73,6 +74,15 @@ class LauncherActivity : AppCompatActivity() {
                             linkTo(start = parent.start, end = parent.end)
                         },
                     cameraController = cameraController,
+                    onSurfaceCreated = {
+                        log("Surface created.")
+                    },
+                    onSurfaceChanged = { width, height ->
+                        log("Surface changed. $width x $height")
+                    },
+                    onSurfaceDestroyed = {
+                        log("Surface destroyed.")
+                    }
                 )
 
                 CameraPropsLayout(
