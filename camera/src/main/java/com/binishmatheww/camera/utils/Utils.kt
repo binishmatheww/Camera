@@ -16,6 +16,16 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
+
+fun Any.log(
+    message: String?,
+    throwable: Throwable? = null
+) = log(
+    tag = this::class.java.simpleName,
+    message = message,
+    throwable = null
+)
+
 fun log(
     message : String?,
     throwable: Throwable? = null
