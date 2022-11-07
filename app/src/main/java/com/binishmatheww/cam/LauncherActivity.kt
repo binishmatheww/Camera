@@ -113,6 +113,7 @@ class LauncherActivity : AppCompatActivity() {
                     onCameraSizeSelected = { cameraSize ->
                         cameraController.cameraScope.launch {
                             cameraController.selectSize(cameraSize)
+                            cameraController.initialize()
                         }
                     }
                 )

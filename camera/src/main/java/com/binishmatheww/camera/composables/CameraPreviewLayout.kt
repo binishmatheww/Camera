@@ -6,6 +6,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import com.binishmatheww.camera.CameraController
 import com.binishmatheww.camera.utils.AutoFitSurfaceView
+import kotlinx.coroutines.launch
 
 @Composable
 fun CameraPreviewLayout(
@@ -39,7 +40,13 @@ fun CameraPreviewLayout(
 
                     onSurfaceCreated.invoke()
 
-                    cameraController.initialize()
+                    cameraController.cameraScope.launch {
+
+                        cameraController.selectSize(cameraController.selectedCameraSize)
+
+                        cameraController.initialize()
+
+                    }
 
                 }
 
