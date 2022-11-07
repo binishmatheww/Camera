@@ -110,40 +110,33 @@ class CameraController(
 
     }
 
-    fun initialize(){
+    suspend fun initialize(){
 
-        cameraScope.launch {
+        cameraDevice?.close()
 
-            selectSize(selectedCameraSize)
+        // Open the selected camera
+        cameraDevice = openCamera(cameraController = this@CameraController)
 
-            cameraDevice?.close()
+        // Creates list of Surfaces where the camera will output frames
+        targetSurfaces.clear()
+        targetSurfaces.addAll(listOf(viewFinder!!.holder.surface, imageReader!!.surface))
 
-            // Open the selected camera
-            cameraDevice = openCamera(cameraController = this@CameraController)
+        // Start a capture session using our open camera and list of Surfaces where frames will go
+        cameraCaptureSession = createCaptureSession(cameraController = this@CameraController)
 
-            // Creates list of Surfaces where the camera will output frames
-            targetSurfaces.clear()
-            targetSurfaces.addAll(listOf(viewFinder!!.holder.surface, imageReader!!.surface))
+        cameraDevice?.createCaptureRequest(
+            CameraDevice.TEMPLATE_PREVIEW
+        )?.let { captureRequestBuilder ->
 
-            // Start a capture session using our open camera and list of Surfaces where frames will go
-            cameraCaptureSession = createCaptureSession(cameraController = this@CameraController)
+            captureRequestBuilder.addTarget(viewFinder!!.holder.surface)
 
-            cameraDevice?.createCaptureRequest(
-                CameraDevice.TEMPLATE_PREVIEW
-            )?.let { captureRequestBuilder ->
-
-                captureRequestBuilder.addTarget(viewFinder!!.holder.surface)
-
-                // This will keep sending the capture request as frequently as possible until the
-                // session is torn down or session.stopRepeating() is called
-                cameraCaptureSession?.setRepeatingRequest(
-                    captureRequestBuilder.build(),
-                    null,
-                    cameraHandler
-                )
-
-
-            }
+            // This will keep sending the capture request as frequently as possible until the
+            // session is torn down or session.stopRepeating() is called
+            cameraCaptureSession?.setRepeatingRequest(
+                captureRequestBuilder.build(),
+                null,
+                cameraHandler
+            )
 
 
         }
@@ -285,7 +278,7 @@ class CameraController(
 
     }
 
-    suspend fun selectSize(inputSize : SmartSize? ) = withContext(Dispatchers.Main){
+    suspend fun selectSize( inputSize : SmartSize? ) = withContext(Dispatchers.Main){
 
         selectedCameraSize = inputSize ?: selectedCameraProp?.outputSizes?.maxByOrNull { it.size.height * it.size.width }
 
