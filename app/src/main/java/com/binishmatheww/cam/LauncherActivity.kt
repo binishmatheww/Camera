@@ -16,6 +16,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
@@ -39,6 +40,8 @@ class LauncherActivity : AppCompatActivity() {
                 modifier = Modifier
                     .fillMaxSize()
             ) {
+
+                val context = LocalContext.current
 
                 val (
                 cameraPropsConstraint,
@@ -130,7 +133,16 @@ class LauncherActivity : AppCompatActivity() {
                         cameraController.cameraScope.launch {
 
                             isCaptureButtonEnabled = false
-                            cameraController.captureImage()
+
+                            cameraController.captureImage{ result ->
+
+                                cameraController.saveImage(
+                                    result = result,
+                                    fileLocation = context.getExternalFilesDir(null)
+                                )
+
+                            }
+
                             isCaptureButtonEnabled = true
 
                         }

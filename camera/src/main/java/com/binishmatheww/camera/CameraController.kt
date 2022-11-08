@@ -296,33 +296,55 @@ class CameraController(
 
     }
 
-    suspend fun captureImage() {
+    suspend fun captureImage(
+        onCapture : suspend (CombinedCaptureResult) -> Unit = defaultCaptureAction
+    ) {
 
         takePhoto(
             cameraController = this
         ).use { result ->
 
-            log(TAG, "Result received: $result")
-
-            // Save the result to disk
-            val output = saveResult(
-                context = context,
-                characteristics = selectedCameraCharacteristics!!,
-                result = result,
-            )
-
-            log(TAG, "Image saved: ${output.absolutePath}")
-
-            // If the result is a JPEG file, update EXIF metadata with orientation info
-            if (output.extension == "jpg") {
-                val exif = ExifInterface(output.absolutePath)
-                exif.setAttribute(
-                    ExifInterface.TAG_ORIENTATION, result.orientation.toString())
-                exif.saveAttributes()
-                log(TAG, "EXIF metadata saved: ${output.absolutePath}")
-            }
+            onCapture.invoke(result)
 
         }
+
+    }
+
+    private val defaultCaptureAction : suspend (CombinedCaptureResult) -> Unit = { result ->
+
+        log(TAG, "Result received: $result")
+
+        // Save the result to disk
+        val output = saveResult(
+            context = context,
+            characteristics = selectedCameraCharacteristics!!,
+            result = result,
+            fileLocation = context.getExternalFilesDir(null)
+        )
+
+        log(TAG, "Image saved: ${output.absolutePath}")
+
+        // If the result is a JPEG file, update EXIF metadata with orientation info
+        if (output.extension == "jpg") {
+            val exif = ExifInterface(output.absolutePath)
+            exif.setAttribute(ExifInterface.TAG_ORIENTATION, result.orientation.toString())
+            exif.saveAttributes()
+            log(TAG, "EXIF metadata saved: ${output.absolutePath}")
+        }
+
+    }
+
+    suspend fun saveImage(
+        result: CombinedCaptureResult,
+        fileLocation: File?
+    ){
+
+        saveResult(
+            context = context,
+            characteristics = selectedCameraCharacteristics!!,
+            result = result,
+            fileLocation = fileLocation
+        )
 
     }
 
@@ -566,9 +588,10 @@ class CameraController(
 
         /** Helper function used to save a [CombinedCaptureResult] into a [File] */
         suspend fun saveResult(
-            context: Context,
+            context : Context,
             characteristics : CameraCharacteristics,
-            result: CombinedCaptureResult,
+            result : CombinedCaptureResult,
+            fileLocation : File? = null
         ): File = suspendCoroutine { cont ->
 
             when (result.format) {
@@ -578,7 +601,7 @@ class CameraController(
                     val buffer = result.image.planes[0].buffer
                     val bytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
                     try {
-                        val output = createFile(context, "jpg")
+                        val output = createFile(context = context, fileLocation = fileLocation, extension = "jpg")
                         FileOutputStream(output).use { it.write(bytes) }
                         cont.resume(output)
                     } catch (exc: IOException) {
@@ -591,7 +614,7 @@ class CameraController(
                 ImageFormat.RAW_SENSOR -> {
                     val dngCreator = DngCreator(characteristics, result.metadata)
                     try {
-                        val output = createFile(context, "dng")
+                        val output = createFile(context = context, fileLocation = fileLocation, extension =  "dng")
                         FileOutputStream(output).use { dngCreator.writeImage(it, result.image) }
                         cont.resume(output)
                     } catch (exc: IOException) {
