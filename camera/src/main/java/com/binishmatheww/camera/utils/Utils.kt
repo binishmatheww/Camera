@@ -11,12 +11,14 @@ import android.media.Image
 import android.util.Log
 import android.util.Size
 import android.view.Surface
+import androidx.annotation.RestrictTo
 import java.io.Closeable
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 fun Any.log(
     message: String?,
     throwable: Throwable? = null
@@ -26,6 +28,7 @@ fun Any.log(
     throwable = null
 )
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 fun log(
     message : String?,
     throwable: Throwable? = null
@@ -35,6 +38,7 @@ fun log(
     throwable = throwable
 )
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 fun log(
     tag : String,
     message : String?,
