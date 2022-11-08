@@ -192,9 +192,13 @@ fun getOrientation( int : Int ) : String{
  *
  * @return [File] created.
  */
-fun createFile(context: Context, extension: String): File {
+fun createFile(
+    context: Context,
+    fileLocation: File?,
+    extension: String
+): File {
     val sdf = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SSS", Locale.US)
-    return File(context.getExternalFilesDir(null), "IMG_${sdf.format(Date())}.$extension")
+    return File(fileLocation ?: context.getExternalFilesDir(null), "IMG_${sdf.format(Date())}.$extension")
 }
 
 
