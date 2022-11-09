@@ -297,27 +297,27 @@ class CameraController(
     }
 
     suspend fun captureImage(
-        onCapture : suspend (CombinedCaptureResult) -> Unit = defaultCaptureAction
+        onCapture : suspend (CameraCharacteristics, CombinedCaptureResult) -> Unit = defaultCaptureAction
     ) {
 
         takePhoto(
             cameraController = this
         ).use { result ->
 
-            onCapture.invoke(result)
+            onCapture.invoke(selectedCameraCharacteristics!!, result)
 
         }
 
     }
 
-    private val defaultCaptureAction : suspend (CombinedCaptureResult) -> Unit = { result ->
+    private val defaultCaptureAction : suspend (CameraCharacteristics, CombinedCaptureResult) -> Unit = { characteristics, result ->
 
         log(TAG, "Result received: $result")
 
         // Save the result to disk
         val output = saveResult(
             context = context,
-            characteristics = selectedCameraCharacteristics!!,
+            characteristics = characteristics,
             result = result,
             fileLocation = context.getExternalFilesDir(null)
         )
@@ -335,20 +335,17 @@ class CameraController(
     }
 
     suspend fun saveImage(
+        characteristics: CameraCharacteristics,
         result: CombinedCaptureResult,
         fileLocation: File? = null,
         fileName: String? = null
-    ){
-
-        saveResult(
-            context = context,
-            characteristics = selectedCameraCharacteristics!!,
-            result = result,
-            fileLocation = fileLocation,
-            fileName = fileName
-        )
-
-    }
+    ) = saveResult(
+        context = context,
+        characteristics = characteristics,
+        result = result,
+        fileLocation = fileLocation,
+        fileName = fileName
+    )
 
 
     companion object{
