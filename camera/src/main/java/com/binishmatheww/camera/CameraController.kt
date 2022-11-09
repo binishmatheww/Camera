@@ -336,14 +336,16 @@ class CameraController(
 
     suspend fun saveImage(
         result: CombinedCaptureResult,
-        fileLocation: File?
+        fileLocation: File? = null,
+        fileName: String? = null
     ){
 
         saveResult(
             context = context,
             characteristics = selectedCameraCharacteristics!!,
             result = result,
-            fileLocation = fileLocation
+            fileLocation = fileLocation,
+            fileName = fileName
         )
 
     }
@@ -591,7 +593,8 @@ class CameraController(
             context : Context,
             characteristics : CameraCharacteristics,
             result : CombinedCaptureResult,
-            fileLocation : File? = null
+            fileLocation : File? = null,
+            fileName: String? = null
         ): File = suspendCoroutine { cont ->
 
             when (result.format) {
@@ -608,6 +611,7 @@ class CameraController(
                         val output = createFile(
                             context = context,
                             fileLocation = fileLocation,
+                            fileName = fileName,
                             extension = "jpg"
                         )
 
@@ -632,6 +636,7 @@ class CameraController(
                         val output = createFile(
                             context = context,
                             fileLocation = fileLocation,
+                            fileName = fileName,
                             extension =  "dng"
                         )
 
