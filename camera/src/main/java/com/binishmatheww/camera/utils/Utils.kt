@@ -9,7 +9,6 @@ import android.hardware.camera2.CameraMetadata
 import android.hardware.camera2.CaptureResult
 import android.media.Image
 import android.util.Log
-import android.util.Size
 import android.view.Surface
 import androidx.annotation.RestrictTo
 import java.io.Closeable
@@ -25,7 +24,7 @@ fun Any.log(
 ) = log(
     tag = this::class.java.simpleName,
     message = message,
-    throwable = null
+    throwable = throwable
 )
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
