@@ -598,36 +598,61 @@ class CameraController(
 
                 // When the format is JPEG or DEPTH JPEG we can simply save the bytes as-is
                 ImageFormat.JPEG, ImageFormat.DEPTH_JPEG -> {
+
                     val buffer = result.image.planes[0].buffer
+
                     val bytes = ByteArray(buffer.remaining()).apply { buffer.get(this) }
+
                     try {
-                        val output = createFile(context = context, fileLocation = fileLocation, extension = "jpg")
+
+                        val output = createFile(
+                            context = context,
+                            fileLocation = fileLocation,
+                            extension = "jpg"
+                        )
+
                         FileOutputStream(output).use { it.write(bytes) }
+
                         cont.resume(output)
+
                     } catch (exc: IOException) {
                         log(TAG, "Unable to write JPEG image to file", exc)
                         cont.resumeWithException(exc)
                     }
+
                 }
 
                 // When the format is RAW we use the DngCreator utility library
                 ImageFormat.RAW_SENSOR -> {
+
                     val dngCreator = DngCreator(characteristics, result.metadata)
+
                     try {
-                        val output = createFile(context = context, fileLocation = fileLocation, extension =  "dng")
+
+                        val output = createFile(
+                            context = context,
+                            fileLocation = fileLocation,
+                            extension =  "dng"
+                        )
+
                         FileOutputStream(output).use { dngCreator.writeImage(it, result.image) }
+
                         cont.resume(output)
+
                     } catch (exc: IOException) {
                         log(TAG, "Unable to write DNG image to file", exc)
                         cont.resumeWithException(exc)
                     }
+
                 }
 
                 // No other formats are supported by this sample
                 else -> {
+
                     val exc = RuntimeException("${getFormatName(result.image.format)} format is not supported by this library now.")
                     log(TAG, exc.message, exc)
                     cont.resumeWithException(exc)
+
                 }
 
             }
