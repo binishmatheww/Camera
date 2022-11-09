@@ -138,12 +138,13 @@ class LauncherActivity : AppCompatActivity() {
 
                                 cameraController.saveImage(
                                     result = result,
-                                    fileLocation = context.getExternalFilesDir(null)
+                                    fileLocation = context.getExternalFilesDir(null),
+                                    fileName = null
                                 )
 
-                            }
+                                isCaptureButtonEnabled = true
 
-                            isCaptureButtonEnabled = true
+                            }
 
                         }
 
