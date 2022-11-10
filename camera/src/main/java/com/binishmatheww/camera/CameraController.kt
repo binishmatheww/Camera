@@ -315,7 +315,7 @@ class CameraController(
         log(TAG, "Result received: $result")
 
         // Save the result to disk
-        val output = saveResult(
+        val output = saveCaptureResult(
             context = context,
             characteristics = characteristics,
             result = result,
@@ -334,12 +334,12 @@ class CameraController(
 
     }
 
-    suspend fun saveImage(
+    suspend fun saveCapturedImageAsFile(
         characteristics: CameraCharacteristics,
         result: CombinedCaptureResult,
         fileLocation: File? = null,
         fileName: String? = null
-    ) = saveResult(
+    ) = saveCaptureResult(
         context = context,
         characteristics = characteristics,
         result = result,
@@ -586,7 +586,7 @@ class CameraController(
         )
 
         /** Helper function used to save a [CombinedCaptureResult] into a [File] */
-        suspend fun saveResult(
+        suspend fun saveCaptureResult(
             context : Context,
             characteristics : CameraCharacteristics,
             result : CombinedCaptureResult,
