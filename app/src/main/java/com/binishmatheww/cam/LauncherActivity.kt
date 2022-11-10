@@ -136,7 +136,7 @@ class LauncherActivity : AppCompatActivity() {
 
                             cameraController.captureImage{ characteristics, result ->
 
-                                cameraController.saveImage(
+                                cameraController.saveCapturedImageAsFile(
                                     characteristics =characteristics,
                                     result = result,
                                     fileLocation = context.getExternalFilesDir(null),
