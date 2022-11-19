@@ -1,6 +1,8 @@
 package com.binishmatheww.camera.composables
 
 import android.view.SurfaceHolder
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
@@ -17,44 +19,51 @@ fun CameraPreviewLayout(
     onSurfaceCreated : () -> Unit = { },
 ) {
 
-    AndroidView(
+    Column(
         modifier = modifier,
-        factory = { con ->
+        verticalArrangement = Arrangement.Center
+    ) {
 
-            cameraController.viewFinder = AutoFitSurfaceView(con)
+        AndroidView(
+            modifier = Modifier,
+            factory = { con ->
 
-            cameraController.viewFinder?.holder?.addCallback(object : SurfaceHolder.Callback {
+                cameraController.viewFinder = AutoFitSurfaceView(con)
 
-                override fun surfaceDestroyed(
-                    holder: SurfaceHolder
-                ) = onSurfaceDestroyed.invoke()
+                cameraController.viewFinder?.holder?.addCallback(object : SurfaceHolder.Callback {
 
-                override fun surfaceChanged(
-                    holder: SurfaceHolder,
-                    format: Int,
-                    width: Int,
-                    height: Int
-                ) = onSurfaceChanged.invoke(width, height)
+                    override fun surfaceDestroyed(
+                        holder: SurfaceHolder
+                    ) = onSurfaceDestroyed.invoke()
 
-                override fun surfaceCreated(holder: SurfaceHolder) {
+                    override fun surfaceChanged(
+                        holder: SurfaceHolder,
+                        format: Int,
+                        width: Int,
+                        height: Int
+                    ) = onSurfaceChanged.invoke(width, height)
 
-                    onSurfaceCreated.invoke()
+                    override fun surfaceCreated(holder: SurfaceHolder) {
 
-                    cameraController.cameraScope.launch {
+                        onSurfaceCreated.invoke()
 
-                        cameraController.selectSize(cameraController.selectedCameraSize)
+                        cameraController.cameraScope.launch {
 
-                        cameraController.initialize()
+                            cameraController.selectSize(cameraController.selectedCameraSize)
+
+                            cameraController.initialize()
+
+                        }
 
                     }
 
-                }
+                })
 
-            })
+                cameraController.viewFinder!!
 
-            cameraController.viewFinder!!
+            }
+        )
 
-        }
-    )
+    }
 
 }
