@@ -16,7 +16,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
+//@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
 fun Any.log(
     message: String?,
     throwable: Throwable? = null
@@ -36,7 +36,7 @@ fun log(
     throwable = throwable
 )*/
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
+//@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
 fun log(
     tag : String,
     message : String?,
