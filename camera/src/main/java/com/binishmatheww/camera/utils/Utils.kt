@@ -1,6 +1,5 @@
 package com.binishmatheww.camera.utils
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.ImageFormat
 import android.hardware.camera2.CameraCharacteristics
@@ -17,7 +16,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 
-//@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
 fun Any.log(
     message: String?,
     throwable: Throwable? = null
@@ -27,7 +26,7 @@ fun Any.log(
     throwable = throwable
 )
 
-//@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
+/*@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
 fun log(
     message : String?,
     throwable: Throwable? = null
@@ -35,9 +34,9 @@ fun log(
     tag = "com.binishmatheww.camera",
     message = message,
     throwable = throwable
-)
+)*/
 
-//@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP_PREFIX)
 fun log(
     tag : String,
     message : String?,
@@ -74,7 +73,6 @@ data class CameraProp(
     )
 
 /** Helper function used to list all compatible cameras and supported pixel formats */
-@SuppressLint("InlinedApi")
 fun CameraManager.enumerateCameras(): List<CameraProp> {
 
     val availableCameras = mutableListOf<CameraProp>()
