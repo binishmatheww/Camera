@@ -7,6 +7,7 @@ import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CameraMetadata
 import android.hardware.camera2.CaptureResult
 import android.media.Image
+import android.os.Build
 import android.util.Log
 import android.view.Surface
 import androidx.annotation.RestrictTo
@@ -117,6 +118,20 @@ fun CameraManager.enumerateCameras(): List<CameraProp> {
 
 }
 
+/** Helper function used check if Camera2 API features are enabled or not */
+fun CameraManager.isCamera2ApiEnabled(): Boolean {
+
+    return this.cameraIdList.any {
+        val characteristics = this.getCameraCharacteristics(it)
+        val supportedHardwareLevel = characteristics.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+        supportedHardwareLevel == CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL
+                || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && supportedHardwareLevel == CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3)
+                || supportedHardwareLevel == CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY
+    }
+
+}
+
+/** Helper function to get format name from id */
 fun getFormatName( int : Int ) : String {
 
     return when(int){
@@ -173,6 +188,7 @@ fun getFormatName( int : Int ) : String {
 
 }
 
+/** Helper function to get orientation from id */
 fun getOrientation( int : Int ) : String{
 
     return when(int) {

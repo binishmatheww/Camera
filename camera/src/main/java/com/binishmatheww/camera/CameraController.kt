@@ -46,6 +46,8 @@ class CameraController(
 
     var cameraManager : CameraManager
 
+    private var isCamera2ApiEnabled = false
+
     var viewFinder : AutoFitSurfaceView? = null
 
     val requiredFormats = mutableListOf<Int>()
@@ -105,6 +107,8 @@ class CameraController(
         relativeOrientationListener?.enable()
 
         cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+
+        isCamera2ApiEnabled = cameraManager.isCamera2ApiEnabled()
 
         availableCameraProps.clear()
 
@@ -170,6 +174,12 @@ class CameraController(
         cameraCaptureSession = null
 
         cameraScope.cancel(cause)
+
+    }
+
+    fun isCamera2ApiEnabled() : Boolean {
+
+        return isCamera2ApiEnabled
 
     }
 
