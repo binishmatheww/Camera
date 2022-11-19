@@ -37,7 +37,12 @@ class CameraController(
 
     private val imageReaderHandler = Handler(imageReaderThread.looper)
 
-    val cameraScope = CoroutineScope(Dispatchers.IO)
+    private val cameraScopeExceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        log( tag = this::class.java.simpleName, message = "Exception in CameraScope. ${throwable.message}" )
+        throwable.printStackTrace()
+    }
+
+    val cameraScope = CoroutineScope( Dispatchers.IO + SupervisorJob() + cameraScopeExceptionHandler )
 
     var cameraManager : CameraManager
 
