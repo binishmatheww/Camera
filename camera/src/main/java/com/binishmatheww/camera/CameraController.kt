@@ -48,6 +48,10 @@ class CameraController(
 
     private var isCamera2ApiEnabled = false
 
+    private var isFlashTorchEnabled = false
+
+    val isFlashTorchEnabledFlow = MutableStateFlow(isFlashTorchEnabled)
+
     var viewFinder : AutoFitSurfaceView? = null
 
     val requiredFormats = mutableListOf<Int>()
@@ -79,6 +83,8 @@ class CameraController(
     var cameraDevice : CameraDevice? = null
 
     var cameraCaptureSession : CameraCaptureSession? = null
+
+    var captureRequestBuilder : CaptureRequest.Builder? = null
 
     var relativeOrientationListener : OrientationEventListener? = null
 
@@ -133,22 +139,9 @@ class CameraController(
         // Start a capture session using our open camera and list of Surfaces where frames will go
         cameraCaptureSession = createCaptureSession(cameraController = this@CameraController)
 
-        cameraDevice?.createCaptureRequest(
-            CameraDevice.TEMPLATE_PREVIEW
-        )?.let { captureRequestBuilder ->
+        captureRequestBuilder = cameraDevice?.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
 
-            captureRequestBuilder.addTarget(viewFinder!!.holder.surface)
-
-            // This will keep sending the capture request as frequently as possible until the
-            // session is torn down or session.stopRepeating() is called
-            cameraCaptureSession?.setRepeatingRequest(
-                captureRequestBuilder.build(),
-                null,
-                cameraHandler
-            )
-
-
-        }
+        createCaptureSession()
 
     }
 
@@ -177,9 +170,37 @@ class CameraController(
 
     }
 
+    private fun createCaptureSession(){
+
+        captureRequestBuilder?.addTarget(viewFinder!!.holder.surface)
+        captureRequestBuilder?.set(
+            CaptureRequest.FLASH_MODE,
+            if(isFlashTorchEnabled) CaptureRequest.FLASH_MODE_TORCH else CaptureRequest.FLASH_MODE_OFF
+        )
+
+        // This will keep sending the capture request as frequently as possible until the
+        // session is torn down or session.stopRepeating() is called
+        cameraCaptureSession?.setRepeatingRequest(
+            captureRequestBuilder?.build() ?: return,
+            null,
+            cameraHandler
+        )
+
+    }
+
     fun isCamera2ApiEnabled() : Boolean {
 
         return isCamera2ApiEnabled
+
+    }
+
+    suspend fun toggleFlashTorch(){
+
+        isFlashTorchEnabled = !isFlashTorchEnabled
+
+        createCaptureSession()
+
+        isFlashTorchEnabledFlow.emit(isFlashTorchEnabled)
 
     }
 
