@@ -47,7 +47,8 @@ class LauncherActivity : AppCompatActivity() {
                 cameraPropsConstraint,
                 cameraSizesConstraint,
                 cameraPreviewLayoutConstraint,
-                captureButtonConstraint
+                flashTorchButtonConstraint,
+                captureButtonConstraint,
                 ) = createRefs()
 
                 val cameraController = rememberCameraController()
@@ -67,6 +68,8 @@ class LauncherActivity : AppCompatActivity() {
                 val availableCameraSizes by cameraController.availableCameraSizesFlow.collectAsStateWithLifecycle()
 
                 val selectedCameraSize by cameraController.selectedCameraSizeFlow.collectAsStateWithLifecycle()
+
+                val isFlashTorchEnabled by cameraController.isFlashTorchEnabledFlow.collectAsStateWithLifecycle()
 
                 var isCaptureButtonEnabled by remember { mutableStateOf(true) }
 
@@ -120,6 +123,28 @@ class LauncherActivity : AppCompatActivity() {
                         }
                     }
                 )
+
+                Button(
+                    modifier = Modifier
+                        .constrainAs(flashTorchButtonConstraint) {
+                            linkTo(start = parent.start, end = captureButtonConstraint.start)
+                            bottom.linkTo(parent.bottom, 24.dp)
+                        },
+                    enabled = isCaptureButtonEnabled,
+                    onClick = {
+
+                        cameraController.cameraScope.launch {
+                            cameraController.toggleFlashTorch()
+                        }
+
+                    }
+                ) {
+
+                    Text(
+                        text = if(isFlashTorchEnabled) "Off" else "On"
+                    )
+
+                }
 
                 Button(
                     modifier = Modifier
