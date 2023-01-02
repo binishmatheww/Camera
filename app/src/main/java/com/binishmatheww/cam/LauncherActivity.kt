@@ -23,8 +23,8 @@ import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.binishmatheww.camera.composables.CameraPreviewLayout
 import com.binishmatheww.camera.composables.rememberCameraController
-import com.binishmatheww.camera.utils.CameraProp
-import com.binishmatheww.camera.utils.SmartSize
+import com.binishmatheww.camera.models.CameraProp
+import com.binishmatheww.camera.models.SmartSize
 import com.binishmatheww.camera.utils.log
 import kotlinx.coroutines.launch
 

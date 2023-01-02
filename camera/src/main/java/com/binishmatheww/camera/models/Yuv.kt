@@ -1,4 +1,4 @@
-package com.binishmatheww.camera.utils
+package com.binishmatheww.camera.models
 
 import android.graphics.ImageFormat
 import android.media.Image

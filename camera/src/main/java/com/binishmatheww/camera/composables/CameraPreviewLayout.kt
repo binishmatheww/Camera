@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import com.binishmatheww.camera.CameraController
-import com.binishmatheww.camera.utils.AutoFitSurfaceView
+import com.binishmatheww.camera.AutoFitSurfaceView
 import kotlinx.coroutines.launch
 
 @Composable

@@ -12,6 +12,9 @@ import android.os.HandlerThread
 import android.view.OrientationEventListener
 import android.view.Surface
 import androidx.exifinterface.media.ExifInterface
+import com.binishmatheww.camera.models.CameraProp
+import com.binishmatheww.camera.models.CombinedCaptureResult
+import com.binishmatheww.camera.models.SmartSize
 import com.binishmatheww.camera.utils.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -25,7 +25,7 @@ import android.renderscript.Element
 import android.renderscript.RenderScript
 import android.renderscript.ScriptIntrinsicYuvToRGB
 import android.renderscript.Type
-import com.binishmatheww.camera.utils.YuvByteBuffer
+import com.binishmatheww.camera.models.YuvByteBuffer
 import java.nio.ByteBuffer
 
 /**
