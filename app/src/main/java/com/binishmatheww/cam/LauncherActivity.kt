@@ -2,6 +2,7 @@ package com.binishmatheww.cam
 
 import android.graphics.ImageFormat
 import android.hardware.camera2.CameraCharacteristics
+import android.media.ExifInterface
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
@@ -161,12 +162,26 @@ class LauncherActivity : AppCompatActivity() {
 
                             cameraController.captureImage{ characteristics, result ->
 
-                                cameraController.saveCapturedImageAsFile(
+                                val file = cameraController.saveCapturedImageAsFile(
                                     characteristics =characteristics,
                                     result = result,
                                     fileLocation = context.getExternalFilesDir(null),
                                     fileName = null
                                 )
+
+                                if (file.exists()) {
+
+                                    if (file.extension == "jpg") {
+                                        ExifInterface(file.absolutePath).apply {
+                                            setAttribute(
+                                                ExifInterface.TAG_ORIENTATION,
+                                                result.orientation.toString()
+                                            )
+                                            saveAttributes()
+                                        }
+                                    }
+
+                                }
 
                                 isCaptureButtonEnabled = true
 
